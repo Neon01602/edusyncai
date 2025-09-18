@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSync.ai - Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex min-h-screen bg-gray-900 text-white">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gray-700 border-r border-gray-600 p-4 flex flex-col fixed h-screen left-0 top-0 overflow-y-auto">
+        <div class="mb-8">
+            <h1 class="text-2xl font-['Pacifico'] text-white ml-3 mt-2">Edusync AI</h1>
+        </div>
+        <nav class="flex-1">
+            <a href="/home/" class="flex items-center space-x-3 p-3 rounded-md text-white hover:bg-gray-600 mb-2">
+                <i class="ri-home-line"></i>
+                <span id="nav-home">Home</span>
+            </a>
+            <a href="/settings/" class="flex items-center space-x-3 p-3 rounded-md text-white hover:bg-gray-600 mb-3">
+                <i class="ri-settings-line"></i>
+                <span id="nav-settings">Settings</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 ml-64 bg-gray-950">
+        <div class="bg-gray-700 p-4 rounded-md mb-4">
+            <h2 class="text-2xl font-semibold text-white" id="settings-title">Settings</h2>
+        </div>
+        <div class="p-4 max-w-lg bg-gray-600 rounded-md">
+            <div class="space-y-6">
+                <!-- Language Selection -->
+                <div>
+                    <label class="flex items-center gap-2 text-lg text-white">
+                        <i class="ri-global-line"></i> <span id="language-label">Language</span>
+                    </label>
+                    <select id="language-select" class="w-full p-2 rounded-md bg-gray-500 text-white mt-2">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="de">Deutsch</option>
+                        <option value="hi">हिन्दी</option>
+                    </select>
+                </div>
+                <button id="save-btn" class="w-full p-2 bg-blue-600 hover:bg-blue-700 rounded-md text-white">Save Changes</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const translations = {
+            en: { "settings-title": "Settings", "language-label": "Language", "save-btn": "Save Changes", "nav-home": "Home", "nav-settings": "Settings" },
+            es: { "settings-title": "Configuraciones", "language-label": "Idioma", "save-btn": "Guardar cambios", "nav-home": "Inicio", "nav-settings": "Configuraciones" },
+            fr: { "settings-title": "Paramètres", "language-label": "Langue", "save-btn": "Enregistrer les modifications", "nav-home": "Accueil", "nav-settings": "Paramètres" },
+            de: { "settings-title": "Einstellungen", "language-label": "Sprache", "save-btn": "Änderungen speichern", "nav-home": "Startseite", "nav-settings": "Einstellungen" },
+            hi: { "settings-title": "सेटिंग्स", "language-label": "भाषा", "save-btn": "परिवर्तन सहेजें", "nav-home": "होम", "nav-settings": "सेटिंग्स" }
+        };
+
+        function setLanguage(lang) {
+            localStorage.setItem('language', lang);
+            const elements = document.querySelectorAll('[id]');
+            elements.forEach(el => {
+                if (translations[lang][el.id]) {
+                    el.textContent = translations[lang][el.id];
+                }
+            });
+        }
+
+        document.getElementById('language-select').addEventListener('change', (event) => {
+            setLanguage(event.target.value);
+        });
+
+        document.getElementById('save-btn').addEventListener('click', () => {
+            alert("Language updated!");
+        });
+
+        // Load saved language
+        const savedLanguage = localStorage.getItem('language') || 'en';
+        document.getElementById('language-select').value = savedLanguage;
+        setLanguage(savedLanguage);
+    </script>
+</body>
+</html>

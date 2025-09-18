@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "edusync-ai",
+  "private_key_id": "e00a80d7626dc2c8bbdbd23cf953d3856fc26310",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQClSXXQVq4fMqYm\n1lpublyDl/qArZtiUp4AbENf56lyLjFmzg29isvpsAsSVBrmrfozh6T+HyGzo7dM\nTbIx4TnqT7JP8bOxKfAtM2PMxOEIIR/mPiHVg/MeIRDRos5dHxmYrLUXR5R4hf2e\nMEuny0KEkHFq2v5egx/4eJYfqJkeFbibC07CCTmD3pjBqOJYRUw7ONkK8JwBBmBn\novjvwNkU7nwGV+SICfUoxjDCsuRWDfGUhIQh8+YZMmjrQkTjOC3aah1vhVIGdi14\nmsrNomnj8oiwUIj0vzETYYk8bURYAlcQqeUl12yyKrrcU9MVJWaIkFa/K9ha+wyN\n09rOqoCrAgMBAAECggEAKWcv4Fq+LilxTlw2deAmQ35v7QjP2f7I/mEgNWdh3iyt\nCkwGTBr2/lgvRc2UmYEuIfdSAKgKuKWDdlUmFHGPIN8K0xTABtpzA9eSIcqVdgRa\nKcIZlpMBdOQigujN2ay/LCvjBuxSyCgEQjpl0SfMx0kpZ/NocYNWIFcQf+irRkoS\nbWov9s3ZfQkwHC+N7unONbzRkLHx182nviuvgrvg3xAGLbgje4J7/IjQn0WZ8l3k\n6SKCL5LKBQFWUBBLt0t7MwR9Iv1p9FcOaTaL+bTHmMmbjccXcBZPkKZmavpv9MJC\nA7+W2NkS8fMyhypuTLELYbFUxQPXLQiTQF2ve0jJcQKBgQDYllRqb7yR3Hgaoe4T\nCIPWYrMmaBxKTdqtsYjDpIzvqX3XprgKLjudJY8DKRUNbsW8xxbGBB3AcIg1cfev\nByVmZFsM17ydDk51lzeRTCwh72YJScsOP+beqtIPcMswQeJHyQf7ghfiGrtQipeL\nATeDu1787pyHVLLJOZpnJwJ6mwKBgQDDXVFwUzzseOllEPWm9GDoYi+tG5T1uOLN\niyxLYk6fbz8gjZc96qbsC/eHS7iAfUqqcZK2D5l6GJvtcz84gx0qNeriWVo1TfgZ\nDvZAFxtE9c0LQfV2+gYygOs+7AQ2g9t7AuZmeprAGip1bKTIJmcg8LB5aSFmFBg+\nkt/jvtsrMQKBgD3AFo9GDjBT+FY3hsYcbmIoP8Wadz5kFg3hiQmml5wY6c0bNmuI\npOx38d9Hzj3HME9TP9XzBHyCWQNL2/8l/W7E/AScWaU5l/sEww4E9qwyMhhB1sfY\nRj2D3GIUmYnHrvkigskdXSvUzUT4Tp6OGULQoBNjAHPBHTwr1S7Fu3ozAoGAQrMO\nheH1T+rsDFRg+jI/D7fN/TUIg2gvDuvwIICcxTQvAkc1Fq+Rc8+WH/wLLtsX7d8+\nrqfex1+1hLkvIXUqNOoZmlPVR5OqG6wPCMyaw82Dxs8rJgawrPd02ZOs0IvuGC5i\nSSScxu9oBZUlISxzUzy5k4oAHCDKMjrk85WKsFECgYEAinT3fEWrAJg2GFQJ6NEb\nFIwSKIAYqTZ+pl57ipMFcB1HqkQoUhK+pjS9sYOQ0jnpwzpuWk2iWY9DnqAgUSsn\nlDxl/+sf6O/U8jleumiDqUUlIhR59kiMujWv+DhUo6DwlMXqkKMsPEHAALNVgZ3g\nrqvcWdUKJKvbxJRIjdEu/CE=\n-----END PRIVATE KEY-----\n",
+  "client_email": "vision-service@edusync-ai.iam.gserviceaccount.com",
+  "client_id": "102804998768950217502",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/vision-service%40edusync-ai.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

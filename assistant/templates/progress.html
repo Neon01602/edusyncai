@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#020617" />
+  <title>Sahayak.AI · Progress Dashboard</title>
+
+  <!-- Tailwind CSS -->
+  <!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Remix Icon (needed for ri-* classes) -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet" />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root { --surface: #020617; --brand: #0a85ed; --card: #001c55; }
+
+    html, body { height: 100%; margin: 0; padding: 0; }
+
+    body {
+      overflow-y: auto;
+      background:
+        radial-gradient(ellipse 140% 60% at 50% 115%, #001a33 0%, transparent 70%),
+        linear-gradient(to top, #000000 0%, #020617 45%, #001a33 100%);
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-size: 100% 100%, 200% 200%;
+      animation: topGlow 12s ease-in-out infinite alternate;
+      font-family: 'DM Sans','Poppins',system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;
+    }
+
+    /* Background subtle motion */
+    @keyframes topGlow {
+      0% { background-position: 50% 100%, 50% 0%; }
+      100% { background-position: 50% 100%, 50% 100%; }
+    }
+
+    /* Scrollbar (WebKit) */
+    body::-webkit-scrollbar { width: 8px; }
+    body::-webkit-scrollbar-track { background: #1e293b; }
+    body::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; border: 2px solid #1e293b; }
+
+    /* Scrollbar (Firefox) */
+    body { scrollbar-width: thin; scrollbar-color: #4b5563 #1e293b; }
+
+    /* Modal utility */
+    .modal { opacity: 0; visibility: hidden; transition: all .3s ease; }
+    .modal.active { opacity: 1; visibility: visible; }
+
+    /* Skeleton shimmer */
+    .skeleton { position: relative; overflow: hidden; }
+    .skeleton::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+      transform: translateX(-100%);
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { 100% { transform: translateX(100%); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      body { animation: none; }
+      .skeleton::after { animation: none; }
+    }
+  </style>
+</head>
+<body class="text-white">
+
+  <!-- Sidebar (desktop) -->
+  <aside id="sidebar"
+    class="hidden md:flex md:flex-col md:fixed md:top-0 md:left-0 md:w-64 md:h-screen p-6 md:overflow-y-auto shadow-lg z-[50] border-r border-white/50"
+    style="background: var(--surface);">
+
+    <div class="mb-10 flex items-center gap-3 mt-1">
+      <div class="w-12 h-12 overflow-hidden rounded-full ring-1 ring-white/20">
+        <img src="/static/images/logo (3).png" alt="Sahayak.AI" class="w-full h-full object-cover cursor-pointer" />
+      </div>
+      <div class="flex flex-col">
+        <h1 class="text-2xl tracking-wide">Sahayak.AI</h1>
+        <p class="text-sm text-gray-400">Empowering Classrooms</p>
+      </div>
+    </div>
+
+    <nav class="space-y-8 text-sm">
+      <div>
+        <p class="text-gray-500 uppercase font-semibold text-xs tracking-wider mb-3">Main</p>
+        <a href="/home/" id="homeBtn" class="nav-item group">
+          <i class="ri-book-line text-lg"></i>
+          <span>Home</span>
+        </a>
+      </div>
+
+      <div>
+        <p class="text-gray-500 uppercase font-semibold text-xs tracking-wider mb-3">Tools</p>
+        <div class="space-y-2">
+          
+          <a href="{% url 'chatbot' %}" class="nav-item group flex-col text-center">
+            <i class="ri-robot-line text-lg"></i>
+            <span>Ask Syncrona</span>
+          </a>
+        </div>
+      </div>
+      
+
+      <div>
+        <p class="text-gray-500 uppercase font-semibold text-xs tracking-wider mb-3">Settings</p>
+        <a href="/settings/" class="nav-item group">
+          <i class="ri-settings-line text-lg"></i>
+          <span>Settings</span>
+        </a>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 h-14 flex items-center justify-between px-4 md:px-8 shadow-lg z-[40] border-b border-white/50"
+          style="background: var(--surface);">
+    <!-- Left: Logo -->
+    <div class="flex items-center gap-2 -ml-2 md:ml-0">
+      <img src="/static/images/logo (3).png" alt="Sahayak.AI" class="w-10 h-10" />
+      <span class="sr-only">Sahayak.AI</span>
+    </div>
+
+    <!-- Right: Actions -->
+    <div class="flex items-center gap-2 md:gap-4">
+      <!-- Notifications -->
+      <button aria-label="Notifications"
+        class="relative p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+        <i class="ri-notification-3-line text-2xl"></i>
+        <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-gray-900 animate-pulse"></span>
+      </button>
+
+      <!-- Desktop profile -->
+      <div class="hidden md:flex items-center space-x-2  space-y-reverse relative h-10" id="desktopUserMenu">
+        <img id="profileImage" src="/static/default-profile.png" alt="User Profile"
+           class="w-10 h-10 rounded-full object-cover border border-gray-600 cursor-pointer"/>
+      <button id="userMenuButton"
+              class="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-gray-700 transition focus:outline-none h-full">
+        <span id="userName" class="text-white font-medium">Loading...</span>
+        <i class="ri-arrow-down-s-line text-lg text-gray-400 group-hover:text-white"></i>
+      </button>
+    
+          <!-- Dropdown -->
+          <div id="userDropdown"
+         class="hidden absolute right-0 top-full mt-2 w-48 bg-gray-900 rounded-lg shadow-2xl py-2 
+                border border-gray-700 text-sm z-[70]">
+    
+            <a href="{% url 'profile' %}" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">Profile</a>
+            <a href="{% url 'settings' %}" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">Settings</a>
+            <form method="POST" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button type="submit" 
+                      class="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">
+                Sign out
+              </button>
+            </form>
+          </div>
+        </div>
+    
+        <!-- Mobile profile -->
+        <!-- Mobile User Menu -->
+    <!-- Mobile User Menu -->
+    <div class="md:hidden flex items-center relative" id="mobileUserMenu">
+      
+      <button id="mobileUserMenuButton" class="flex items-center -translate-y-1">
+        <img id="profileImageMobile" src="/static/default-profile.png" alt="User Profile"
+             class="w-9 h-9 rounded-full object-cover border border-gray-600 cursor-pointer"/>
+      </button>
+      
+    
+      <!-- Dropdown -->
+      <div id="mobileUserDropdown"
+           class="hidden absolute right-0 top-full mt-2 w-40 bg-gray-900 rounded-lg shadow-2xl py-2 border border-gray-700 text-sm z-[70]">
+        <a href="{% url 'profile' %}" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">Profile</a>
+        <a href="{% url 'settings' %}" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">Settings</a>
+        <form method="POST" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">
+            Sign out
+          </button>
+        </form>
+      </div>
+    </div>
+    </div>
+  </header>
+
+  <!-- Bottom Nav (mobile) -->
+  <nav class="fixed bottom-0 left-0 right-0 z-[50] bg-[#020617]/80 backdrop-blur-md md:hidden border-t border-white/50"
+       style="padding-bottom: calc(env(safe-area-inset-bottom) + 8px);">
+    <div class="h-14 px-6 flex items-center justify-between">
+      <a href="/home/" class="mobile-nav-item" aria-label="Home">
+        <img src="/static/images/image.png" alt="Home" class="w-6 h-6 filter invert" />
+      </a>
+
+      <a href="{% url 'chatbot' %}" class="relative -translate-y-4" aria-label="Syncrona chatbot">
+        <span class="sr-only">Open chatbot</span>
+        <div class="w-16 h-16 rounded-full bg-blue-600 border border-white/70 shadow-lg grid place-items-center">
+          <img src="/static/images/bot.png" alt="Syncrona" class="w-6 h-6 filter brightness-0 invert" />
+        </div>
+      </a>
+
+      <a href="{% url 'progress_page' %}" class="mobile-nav-item active" aria-current="page" aria-label="Progress">
+        <img src="/static/images/performance.png" alt="Progress" class="w-6 h-6 filter invert" />
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main wrapper (adds left margin on desktop) -->
+  <div class="flex flex-col min-h-screen md:ml-64">
+    <div class="h-14"></div>
+    <div class="flex justify-end mb-6 gap-3">
+      
+    </div>
+    
+  
+    <main class="flex-1 px-4 sm:px-6 md:px-8 pb-24 pt-8">
+      <h1 class="text-3xl sm:text-4xl md:text-5xl font-medium mb-6">Your Progress</h1>
+      <div class='mb-6'>
+      <button id="studentBtn" class="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition">
+        Student View
+      </button>
+      <button id="teacherBtn" class="px-4 py-2 rounded-xl bg-gray-700 text-white hover:bg-gray-600 transition">
+        Teacher View
+      </button></div>
+
+    
+      <!-- Mobile Toggle -->
+      
+      <!-- Progress Container -->
+      <div id="studentContent">
+    
+        <!-- Progress Bar -->
+        <div id="barContainer" class="flex-1 bg-[color:var(--card)]/90 backdrop-blur-md p-4 rounded-2xl mb-6 shadow-lg border border-white">
+          <h2 class="text-lg font-semibold mb-3 flex items-center gap-2">
+            <i class="ri-line-chart-fill text-green-400"></i> Overall Progress
+          </h2>
+          <div class="w-full sm:w-full bg-white/10 rounded-full h-3 overflow-hidden">
+            <div id="overallBar" class="bg-green-500 h-3 rounded-full transition-all duration-700 ease-out" style="width:0%"></div>
+          </div>
+          <p class="mt-3 text-sm text-gray-300">
+            Completed <span id="overallPercent" class="font-bold text-white">0%</span> of all work.
+          </p>
+        </div>
+        
+        <!-- Grey Horizontal Line -->
+        <hr class="border-t border-gray-700 my-10 w-full"/>
+        
+        <!-- Search + Filter Section -->
+        <div class="flex flex-col sm:flex-row sm:justify-start items-start sm:items-center gap-3 mb-6">
+          <!-- Search Bar -->
+          <div class="relative w-full sm:max-w-xl">
+            <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <input id="searchInput" type="text" placeholder="Search subjects..."
+                   class="w-full pl-10 pr-3 py-2 rounded-xl bg-gray-800/70 border border-gray-500 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm sm:text-base"/>
+          </div>
+        
+          <!-- Category Filter -->
+          <div class="relative w-full sm:w-64 mt-2 sm:mt-0">
+            <select id="filterSelect"
+                    class="w-full appearance-none bg-gray-800 border border-gray-500 rounded-xl px-4 sm:px-6 py-2 sm:py-2 pr-8 text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+              <option value="all" selected>All</option>
+              <option value="notes">Notes</option>
+              <option value="assignment">Assignment</option>
+              <option value="test">Test</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+              <i class="ri-arrow-down-s-line text-white text-lg"></i>
+            </div>
+          </div>
+        </div>
+    
+      <!-- Grid of Cards -->
+      <div id="progressGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"></div>
+      </div>
+      <div id="teacherContent" class="hidden">
+        <h1 class="text-3xl font-medium mb-6">Your Classrooms</h1>
+        <div id="teacherGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"></div>
+      </div>
+    </main>
+  </div>
+  
+  
+  
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const studentBtn = document.getElementById("studentBtn");
+      const teacherBtn = document.getElementById("teacherBtn");
+      const studentContent = document.getElementById("studentContent");
+      const teacherContent = document.getElementById("teacherContent");
+      const teacherGrid = document.getElementById("teacherGrid");
+    
+      // Pass URL from template to JS
+      const teacherClassroomsUrl = "{% url 'teacher_classrooms' %}";
+    
+      studentBtn.addEventListener("click", () => {
+        studentContent.classList.remove("hidden");
+        teacherContent.classList.add("hidden");
+        studentBtn.classList.add("bg-blue-600", "text-white");
+        teacherBtn.classList.remove("bg-green-600");
+      });
+    
+      teacherBtn.addEventListener("click", () => {
+        studentContent.classList.add("hidden");
+        teacherContent.classList.remove("hidden");
+        teacherBtn.classList.add("bg-green-600", "text-white");
+        studentBtn.classList.remove("bg-blue-600");
+        loadTeacherClassrooms();
+      });
+    
+      function loadTeacherClassrooms() {
+        fetch(teacherClassroomsUrl)
+          .then(res => {
+            if (!res.ok) throw new Error("Network response was not ok");
+            return res.json();
+          })
+          .then(data => {
+            teacherGrid.innerHTML = "";
+            if (!data.classrooms || !data.classrooms.length) {
+              teacherGrid.innerHTML = `<p class="text-gray-400 col-span-full">No classrooms created yet.</p>`;
+              return;
+            }
+            data.classrooms.forEach(cls => {
+              const card = document.createElement("div");
+              card.className = "bg-[#001c55] backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-800 hover:shadow-blue-900/30 transition-all duration-300 cursor-pointer";
+              card.innerHTML = `
+                <h2 class="text-xl font-medium mb-2">${cls.subject}</h2>
+                <p class="text-gray-400 text-sm">${cls.students_count} students</p>
+              `;
+              card.addEventListener("click", () => {
+                window.location.href = `/teacher/classroom/${cls.id}/`;
+              });
+              teacherGrid.appendChild(card);
+            });
+          })
+          .catch(err => console.error("Error loading classrooms:", err));
+      }
+    });
+    
+document.addEventListener("DOMContentLoaded", () => {
+  const grid = document.getElementById("progressGrid");
+  const overallBar = document.getElementById("overallBar");
+  const overallPercent = document.getElementById("overallPercent");
+  const searchInput = document.getElementById("searchInput");
+  const filterSelect = document.getElementById("filterSelect");
+
+  let allClasses = [];
+
+  function getIcon(subject) {
+    const map = [
+      { keywords: ["math"], icon: "ri-calculator-line" },
+      { keywords: ["science"], icon: "ri-flask-line" },
+      { keywords: ["english"], icon: "ri-book-open-line" },
+      { keywords: ["history"], icon: "ri-ancient-gate-line" },
+      { keywords: ["geography"], icon: "ri-earth-line" },
+      { keywords: ["computer"], icon: "ri-code-box-line" },
+      { keywords: ["music"], icon: "ri-music-2-line" },
+      { keywords: ["art"], icon: "ri-palette-line" },
+      { keywords: ["economics"], icon: "ri-bar-chart-2-line" },
+    ];
+    const name = subject.toLowerCase();
+    for (let entry of map) if (entry.keywords.some(k => name.includes(k))) return entry.icon;
+    return "ri-flask-line";
+  }
+
+  function getProgressColor(percent) {
+    if (percent <= 50) return 'bg-red-500';
+    if (percent <= 80) return 'bg-yellow-400';
+    return 'bg-green-500';
+  }
+  
+  function renderClasses() {
+    grid.innerHTML = "";
+    let totalGraded = 0, totalAll = 0;
+  
+    const term = searchInput.value.toLowerCase();
+    const filter = filterSelect.value;
+  
+    const filtered = allClasses.filter(cls => {
+      const subjectMatch = cls.subject.toLowerCase().includes(term);
+      if (filter === "all") return subjectMatch;
+      return subjectMatch && cls.categories[filter]?.total > 0;
+    });
+  
+    if (!filtered.length) {
+      grid.innerHTML = `<p class="text-gray-500 col-span-full">No classes match your filters.</p>`;
+    }
+  
+    filtered.forEach(cls => {
+      // ✅ fallback to 0 if key not present
+      const graded = filter === "all" 
+        ? (cls.graded_count || 0) 
+        : (cls.categories[filter]?.graded || 0);
+  
+      const total = filter === "all" 
+        ? (cls.total_classworks || 0) 
+        : (cls.categories[filter]?.total || 0);
+  
+      const percent = total > 0 ? Math.round((graded / total) * 100) : 0;
+      const progressColor = getProgressColor(percent);
+  
+      totalGraded += graded;
+      totalAll += total;
+  
+      const card = document.createElement("div");
+      card.className = "progress-card cursor-pointer";
+  
+      card.innerHTML = `
+        <div class="bg-[#001c55] backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-800 hover:shadow-blue-900/30 transition-all duration-300">
+          <h2 class="text-xl font-medium mb-4 flex items-center gap-2">
+            <i class="${getIcon(cls.subject)} text-blue-400"></i>
+            <span class="subject-name">${cls.subject}</span>
+          </h2>
+          <div class="w-full bg-white/10 rounded-full h-3 overflow-hidden">
+            <div class="${progressColor} h-3 rounded-full transition-all duration-700 ease-out" style="width:${percent}%;"></div>
+          </div>
+          <div class="mt-3 flex items-center justify-between">
+            <p class="text-white text-sm">
+              <span class="font-medium">${graded}</span> of
+              <span class="font-medium">${total}</span> graded
+            </p>
+            <span class="px-3 py-1 rounded-full bg-blue-500/20 text-white text-xs font-semibold">${percent}%</span>
+          </div>
+        </div>
+      `;
+  
+      card.addEventListener("click", () => {
+        window.location.href = `/view-classroom/${cls.unique_code}/`;
+      });
+  
+      grid.appendChild(card);
+    });
+  
+    // ✅ Update overall progress safely
+    if (totalAll > 0) {
+      const overallPercentValue = Math.round((totalGraded / totalAll) * 100);
+      overallBar.style.width = overallPercentValue + "%";
+      overallPercent.textContent = overallPercentValue + "%";
+    } else {
+      overallBar.style.width = "0%";
+      overallPercent.textContent = "0%";
+    }
+  }
+  
+  
+  // Fetch class data
+  fetch("{% url 'get_class_progress' %}")
+    .then(res => res.json())
+    .then(data => { 
+      allClasses = data.classes || []; 
+      renderClasses(); 
+    });
+  
+  searchInput.addEventListener("input", renderClasses);
+  filterSelect.addEventListener("change", renderClasses);
+  
+});
+document.addEventListener("DOMContentLoaded", async function () {
+  try {
+    const response = await fetch("{% url 'get_user_profile' %}"); // Django API endpoint
+    const data = await response.json();
+
+    console.log("User Profile Data:", data); // Debugging
+
+    if (response.ok) {
+      document.getElementById("userName").textContent =
+        "Welcome, " + data.first_name + " " + data.last_name; // Display both names
+
+      const profileImageDesktop = document.getElementById("profileImage");
+      const profileImageMobile = document.getElementById("profileImageMobile");
+
+      if (data.profile_picture) {
+        profileImageDesktop.src = data.profile_picture; // Set desktop profile image
+        if (profileImageMobile) {
+          profileImageMobile.src = data.profile_picture; // Set mobile profile image
+        }
+      } else {
+        profileImageDesktop.src = "/static/default-profile.png"; // Fallback desktop image
+        if (profileImageMobile) {
+          profileImageMobile.src = "/static/default-profile.png"; // Fallback mobile image
+        }
+      }
+    } else {
+      console.error("Error fetching user profile:", data.error);
+    }
+  } catch (error) {
+    console.error("Error loading profile:", error);
+  }
+});
+document.addEventListener("DOMContentLoaded", () => {
+  // Desktop dropdown
+  const desktopButton = document.getElementById("userMenuButton");
+  const desktopDropdown = document.getElementById("userDropdown");
+  if (desktopButton && desktopDropdown) {
+    desktopButton.addEventListener("click", (e) => {
+      desktopDropdown.classList.toggle("hidden");
+      e.stopPropagation();
+    });
+  }
+
+  // Mobile dropdown
+  const mobileButton = document.getElementById("mobileUserMenuButton");
+  const mobileImage = document.getElementById("mobileProfileImage");
+  const mobileDropdown = document.getElementById("mobileUserDropdown");
+
+  if (mobileButton && mobileDropdown) {
+    mobileButton.addEventListener("click", (e) => {
+      mobileDropdown.classList.toggle("hidden");
+      e.stopPropagation();
+    });
+  }
+
+  if (mobileImage && mobileDropdown) {
+    mobileImage.addEventListener("click", (e) => {
+      mobileDropdown.classList.toggle("hidden");
+      e.stopPropagation();
+    });
+  }
+
+  // Close dropdowns when clicking outside
+  document.addEventListener("click", (e) => {
+    if (desktopDropdown && !desktopDropdown.contains(e.target) && desktopButton && !desktopButton.contains(e.target)) {
+      desktopDropdown.classList.add("hidden");
+    }
+    if (mobileDropdown && !mobileDropdown.contains(e.target) && mobileButton && !mobileButton.contains(e.target) && !mobileImage.contains(e.target)) {
+      mobileDropdown.classList.add("hidden");
+    }
+  });
+});
+</script>
+
+  
+</body>
+</html>

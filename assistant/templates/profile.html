@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>User Profile</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Remix Icon CDN -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css"
+    rel="stylesheet"
+  />
+</head>
+<body class="bg-gray-900 text-white h-screen p-0 font-sans overflow-hidden">
+
+  <div class="flex h-screen">
+
+    <!-- Left Panel: User Info Summary -->
+    <aside
+  class="w-[400px] h-[630px] bg-white dark:bg-gray-900 rounded-3xl shadow-lg
+         flex flex-col items-center text-center space-y-8 relative pt-14 pb-10 px-12 ml-[180px] mt-12 border border-gray-200 dark:border-gray-700"
+>
+  <!-- Profile Picture with subtle ring -->
+  <div class="relative group">
+    <div
+      class="w-28 h-28 rounded-full border-4 border-gray-300 dark:border-gray-600
+             overflow-hidden shadow-md transition-transform duration-300 group-hover:scale-105"
+    >
+      <img
+        id="profileImage"
+        src="/static/default-profile.png"
+        alt="Profile"
+        class="w-full h-full object-cover"
+      />
+    </div>
+    <button
+      aria-label="Edit profile picture"
+      title="Edit Image"
+      class="absolute bottom-1 right-1 bg-blue-600 hover:bg-blue-700
+             text-white p-2 rounded-full shadow-md transition focus:outline-none focus:ring-2 focus:ring-blue-400"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="w-5 h-5"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path
+          d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828zM4 14v2h2l9.293-9.293-2-2L4 14z"
+        />
+      </svg>
+    </button>
+  </div>
+
+  <!-- User Info -->
+  <h2
+    id="userName"
+    class="text-3xl font-semibold text-gray-900 dark:text-gray-100 select-text"
+  >
+    John Doe
+  </h2>
+  <p
+    id="userEmailText"
+    class="text-sm italic text-gray-500 dark:text-gray-400 select-text"
+  >
+    Loading email...
+  </p>
+  <p class="max-w-[280px] mx-auto text-gray-600 dark:text-gray-400 text-base font-normal leading-relaxed">
+    Welcome to your profile page
+  </p>
+
+  <!-- Dropdown Button and Menu -->
+  <div class="absolute top-8 left-8 z-40">
+    <div class="relative">
+      <button
+        id="dropdownBtn"
+        aria-haspopup="true"
+        aria-expanded="false"
+        class="p-3 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-700 dark:text-gray-300
+               hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+        aria-label="Open user menu"
+      >
+        <!-- 3-dot SVG menu icon -->
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="w-6 h-6"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <circle cx="3" cy="10" r="2" />
+          <circle cx="10" cy="10" r="2" />
+          <circle cx="17" cy="10" r="2" />
+        </svg>
+      </button>
+
+      <!-- Dropdown Menu -->
+      <div
+        id="dropdownMenu"
+        class="hidden absolute left-0 mt-3 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-2 border border-gray-200 dark:border-gray-700"
+        role="menu"
+        aria-label="User menu"
+      >
+        <a
+          href="{% url 'home'%}"
+          class="block px-6 py-3 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-blue-600 hover:text-white transition rounded-t-lg"
+          role="menuitem"
+          >Home</a
+        >
+        <a
+          href="{% url 'settings'%}"
+          class="block px-6 py-3 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-blue-600 hover:text-white transition"
+          role="menuitem"
+          >Settings</a
+        >
+        <a
+          href="{% url 'logout' %}"
+          class="block px-6 py-3 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-blue-600 hover:text-white transition rounded-b-lg"
+          role="menuitem"
+          >Sign out</a
+        >
+      </div>
+    </div>
+  </div>
+</aside>
+
+
+    <!-- Right Panel: Forms -->
+    <main class="flex-1 overflow-y-auto p-8 space-y-12 bg-gray-900 min-h-screen">
+      <!-- Personal Info -->
+      <section class="bg-gray-800 p-8 rounded-2xl shadow-lg max-w-xl mx-auto">
+        <h3 class="text-2xl font-semibold text-white mb-8 border-b border-gray-700 pb-3">
+          Personal Info
+        </h3>
+        <form class="space-y-6" novalidate>
+          <div>
+            <label for="fullNameInput" class="block text-sm font-medium text-gray-300 mb-2">
+              Full Name
+            </label>
+            <input
+              type="text"
+              id="fullNameInput"
+              class="w-full rounded-lg bg-gray-700 text-white px-5 py-3 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500 transition border border-transparent focus:border-blue-500"
+              placeholder="Full Name"
+              value="John Doe"
+            />
+          </div>
+          <div>
+            <label for="userEmail" class="block text-sm font-medium text-gray-300 mb-2">
+              Email Address
+            </label>
+            <input
+              type="email"
+              id="userEmail"
+              readonly
+              class="w-full rounded-lg bg-gray-700 text-gray-400 px-5 py-3 placeholder-gray-500 cursor-not-allowed border border-transparent focus:outline-none focus:ring-4 focus:ring-blue-500 transition"
+              placeholder="Email"
+              value="Loading email..."
+              aria-readonly="true"
+            />
+          </div>
+    
+          <button
+            type="submit"
+            class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg py-3 shadow-md transition focus:outline-none focus:ring-4 focus:ring-blue-400"
+          >
+            Save Changes
+          </button>
+        </form>
+      </section>
+    
+      <!-- Account Settings -->
+      <section class="bg-gray-800 p-8 rounded-2xl shadow-lg max-w-xl mx-auto">
+        <h3 class="text-2xl font-semibold text-white mb-8 border-b border-gray-700 pb-3">
+          Account Settings
+        </h3>
+        <form class="space-y-6" novalidate>
+          <div>
+            <label for="usernameInput" class="block text-sm font-medium text-gray-300 mb-2">
+              Username
+            </label>
+            <input
+              id="usernameInput"
+              type="text"
+              class="w-full rounded-lg bg-gray-700 text-white px-5 py-3 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500 transition border border-transparent focus:border-blue-500"
+              value="johndoe"
+            />
+          </div>
+          <div>
+            <label for="newPassword" class="block text-sm font-medium text-gray-300 mb-2">
+              New Password
+            </label>
+            <input
+              id="newPassword"
+              type="password"
+              class="w-full rounded-lg bg-gray-700 text-white px-5 py-3 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500 transition border border-transparent focus:border-blue-500"
+              autocomplete="new-password"
+              placeholder="••••••••"
+            />
+          </div>
+          <div>
+            <label for="confirmPassword" class="block text-sm font-medium text-gray-300 mb-2">
+              Confirm Password
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              class="w-full rounded-lg bg-gray-700 text-white px-5 py-3 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500 transition border border-transparent focus:border-blue-500"
+              autocomplete="new-password"
+              placeholder="••••••••"
+            />
+          </div>
+    
+          <button
+            type="submit"
+            class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg py-3 shadow-md transition focus:outline-none focus:ring-4 focus:ring-blue-400"
+          >
+            Update Settings
+          </button>
+        </form>
+      </section>
+    </main>
+    
+  </div>
+
+  <!-- Dropdown Script -->
+  <script>
+    const dropdownBtn = document.getElementById("dropdownBtn");
+const dropdownMenu = document.getElementById("dropdownMenu");
+
+dropdownBtn.addEventListener("click", () => {
+  const isHidden = dropdownMenu.classList.contains("hidden");
+  dropdownMenu.classList.toggle("hidden");
+  dropdownBtn.setAttribute("aria-expanded", isHidden ? "true" : "false");
+});
+
+// Close dropdown if clicked outside
+document.addEventListener("click", (event) => {
+  const isClickInside = dropdownBtn.contains(event.target) || dropdownMenu.contains(event.target);
+  if (!isClickInside) {
+    dropdownMenu.classList.add("hidden");
+    dropdownBtn.setAttribute("aria-expanded", "false");
+  }
+});
+
+    document.addEventListener("DOMContentLoaded", async function () {
+      try {
+        const response = await fetch("{% url 'get_user_profile' %}");
+        const data = await response.json();
+
+        if (response.ok) {
+          // Update name in left panel
+          const userNameElem = document.getElementById("userName");
+          userNameElem.textContent = data.first_name + " " + data.last_name;
+          userNameElem.classList.remove("text-gray-400");
+
+          // Update full name input on right panel
+          const fullNameInput = document.getElementById("fullNameInput");
+          fullNameInput.value = data.first_name + " " + data.last_name;
+
+          // Update email input (readonly)
+          const userEmailInput = document.getElementById("userEmail");
+          if (userEmailInput) {
+            if (data.email) {
+              userEmailInput.value = data.email;
+              userEmailInput.classList.remove("text-opacity-50", "italic", "text-gray-500");
+              userEmailInput.classList.add("text-white");
+              userEmailInput.readOnly = true;
+            } else {
+              userEmailInput.value = "Email not available";
+              userEmailInput.classList.add("italic", "text-gray-500");
+              userEmailInput.readOnly = true;
+            }
+          }
+
+          // Update email text paragraph in left panel
+          const userEmailText = document.getElementById("userEmailText");
+          if (userEmailText) {
+            if (data.email) {
+              userEmailText.textContent = data.email;
+              userEmailText.classList.remove("text-gray-400");
+              userEmailText.classList.add("text-white");
+            } else {
+              userEmailText.textContent = "Email not available";
+              userEmailText.classList.add("italic", "text-gray-500");
+            }
+          }
+
+          // Update profile image
+          const profileImage = document.getElementById("profileImage");
+          profileImage.src = data.profile_picture || "/static/default-profile.png";
+        } else {
+          console.error("Error fetching user profile:", data.error);
+        }
+      } catch (error) {
+        console.error("Error loading profile:", error);
+      }
+    });
+    
+  </script>
+</body>
+</html>

@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sahayak — All-in-One (Pure HTML + Tailwind + JS)</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN (for analytics) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* Animations & helpers */
+    @keyframes fadeInUp { from { opacity:0; transform: translateY(8px) } to { opacity:1; transform: translateY(0)} }
+    .fade-in-up { animation: fadeInUp .35s ease both; }
+    .modal-backdrop { background: rgba(2,6,23,0.55); }
+    .glass { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    .animate-fade-in { animation: fadeInUp .28s ease both; }
+    .truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .small { font-size: 0.85rem; }
+    /* centered modal container helper */
+    .centered { display:flex; align-items:center; justify-content:center; }
+    /* contenteditable editor min styling */
+    .editor { min-height: 120px; border:1px solid #e5e7eb; padding: 0.5rem; border-radius: 0.375rem; }
+    .editor[contenteditable="true"]:focus { outline: 2px solid rgba(99,102,241,0.25); }
+    /* toast stacking */
+    #toastArea { position: fixed; right: 1rem; bottom: 1rem; z-index: 70; display:flex; flex-direction:column; gap:0.5rem; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100">
+
+  <!-- NAV -->
+  <nav class="bg-white/60 dark:bg-gray-800/70 glass sticky top-0 z-50 shadow">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="#" class="text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-pink-500">Sahayak</a>
+
+        <div class="hidden sm:flex gap-2 text-sm">
+          <button onclick="showPage('dashboard')" class="px-3 py-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900">Dashboard</button>
+          <button onclick="showPage('myclassrooms')" class="px-3 py-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900">My Classes</button>
+          <button onclick="showPage('jointclassrooms')" class="px-3 py-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900">Joint Classes</button>
+          <button onclick="showPage('analytics')" class="px-3 py-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900">Analytics</button>
+          <button onclick="showPage('reports')" class="px-3 py-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900">Reports</button>
+          <button onclick="showPage('chatbot')" class="px-3 py-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900">Chatbot</button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="relative hidden sm:block">
+          <input id="globalSearch" oninput="globalSearch()" placeholder="Search assignments, students..." class="px-3 py-2 rounded border w-64 dark:bg-gray-800 dark:border-gray-700" />
+        </div>
+
+        <div class="relative">
+          <button id="notifBtn" onclick="toggleNotifPanel()" class="px-3 py-2 rounded bg-gray-100 dark:bg-gray-700">🔔</button>
+          <div id="notifBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">0</div>
+        </div>
+
+        <button id="profileBtn" onclick="openLoginModal()" class="px-3 py-2 rounded bg-gray-100 dark:bg-gray-700">👤 <span id="profileName">Guest</span></button>
+        <button id="themeToggle" class="px-3 py-2 rounded bg-gray-100 dark:bg-gray-700" title="Toggle dark mode">🌙</button>
+
+        <div class="sm:hidden">
+          <button onclick="toggleMobileMenu()" class="p-2 rounded bg-gray-100 dark:bg-gray-700">☰</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- mobile -->
+    <div id="mobileMenu" class="hidden sm:hidden container mx-auto px-4 pb-3">
+      <div class="flex flex-col gap-2">
+        <button onclick="showPage('dashboard')" class="text-left px-3 py-2 rounded">Dashboard</button>
+        <button onclick="showPage('myclassrooms')" class="text-left px-3 py-2 rounded">My Classes</button>
+        <button onclick="showPage('jointclassrooms')" class="text-left px-3 py-2 rounded">Joint Classes</button>
+        <button onclick="showPage('analytics')" class="text-left px-3 py-2 rounded">Analytics</button>
+        <button onclick="showPage('reports')" class="text-left px-3 py-2 rounded">Reports</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Toast / notifications area -->
+  <div id="toastArea" aria-live="polite"></div>
+
+  <!-- Notifications panel -->
+  <div id="notifPanel" class="hidden fixed right-4 top-16 z-40 w-80 bg-white dark:bg-gray-800 rounded shadow p-3">
+    <div class="flex justify-between items-center mb-2">
+      <h4 class="font-semibold">Notifications</h4>
+      <button class="text-sm text-gray-500" onclick="clearNotifications()">Clear</button>
+    </div>
+    <div id="notifList" class="space-y-2 max-h-64 overflow-y-auto"></div>
+  </div>
+
+  <!-- MAIN -->
+  <main class="container mx-auto px-4 py-8">
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="fade-in-up">
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-3xl font-bold">Dashboard</h1>
+        <div class="flex gap-2 items-center">
+          <label class="text-sm text-gray-500 dark:text-gray-300">Role:</label>
+          <select id="roleSelect" onchange="setRole()" class="px-2 py-1 border rounded dark:bg-gray-800">
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow">
+          <p class="small">Ongoing classes</p>
+          <p id="statClasses" class="text-2xl font-bold text-indigo-600 mt-2">0</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow">
+          <p class="small">Pending submissions</p>
+          <p id="statPending" class="text-2xl font-bold text-amber-500 mt-2">0</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow">
+          <p class="small">Average score</p>
+          <p id="statAvg" class="text-2xl font-bold text-emerald-500 mt-2">0%</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow">
+          <p class="small">Top performer</p>
+          <p id="topPerformer" class="text-2xl font-bold text-purple-600 mt-2">—</p>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow">
+          <h3 class="font-semibold mb-3">Recent Classworks</h3>
+          <div id="recentList" class="space-y-3"></div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow">
+          <h3 class="font-semibold mb-3">Quick Actions</h3>
+          <div class="flex flex-col gap-3">
+            <button onclick="showPage('myclassrooms')" class="px-3 py-2 rounded bg-indigo-600 text-white">Open My Classes</button>
+            <button onclick="showPage('analytics')" class="px-3 py-2 rounded bg-amber-500 text-white">Open Analytics</button>
+            <button onclick="showPage('reports')" class="px-3 py-2 rounded bg-sky-600 text-white">View Reports</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MY CLASSROOMS -->
+    <section id="myclassrooms" class="hidden fade-in-up mt-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold">My Classrooms</h2>
+        <div class="flex gap-2">
+          <input id="cwSearch" oninput="refreshClassworkList()" placeholder="Search classwork..." class="px-3 py-2 border rounded dark:bg-gray-800" />
+          <select id="cwFilter" onchange="refreshClassworkList()" class="px-3 py-2 border rounded dark:bg-gray-800">
+            <option value="all">All</option>
+            <option value="assignment">Assignments</option>
+            <option value="test">Tests</option>
+            <option value="notes">Notes</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- classes list -->
+      <div id="classesListArea" class="mb-6 grid md:grid-cols-3 gap-4"></div>
+
+      <!-- classworks -->
+      <div id="classworkGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+    <!-- JOINT CLASSROOMS -->
+    <section id="jointclassrooms" class="hidden fade-in-up mt-6">
+      <h2 class="text-2xl font-bold mb-4">Joint Classrooms</h2>
+      <div id="jointGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section id="analytics" class="hidden fade-in-up mt-6">
+      <h2 class="text-2xl font-bold mb-4">Analytics</h2>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+          <h3 class="font-semibold mb-2">AI grading overview</h3>
+          <canvas id="aiChart" class="w-full h-56"></canvas>
+        </div>
+        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+          <h3 class="font-semibold mb-2">Leaderboard (Top performers)</h3>
+          <canvas id="leaderboardChart" class="w-full h-56"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- REPORTS -->
+    <section id="reports" class="hidden fade-in-up mt-6">
+      <h2 class="text-2xl font-bold mb-4">Student Reports</h2>
+      <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+        <div class="flex justify-between items-center mb-3">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Select Student</p>
+            <select id="reportStudent" onchange="renderReportChart()" class="px-2 py-1 border rounded dark:bg-gray-800"></select>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="renderReportChart()" class="px-3 py-1 rounded bg-sky-600 text-white">Refresh</button>
+            <button onclick="exportStudentCSV()" class="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700">Export CSV</button>
+          </div>
+        </div>
+        <canvas id="reportChart" class="w-full h-60"></canvas>
+      </div>
+    </section>
+
+    <!-- CHATBOT -->
+    <section id="chatbot" class="hidden fade-in-up mt-6">
+      <h2 class="text-2xl font-bold mb-4">Chatbot Assistant</h2>
+      <div class="bg-white dark:bg-gray-800 p-4 rounded shadow max-w-2xl">
+        <div id="chatbox" class="h-64 overflow-y-auto border p-3 rounded mb-3">
+          <div class="mb-2"><span class="font-bold">AI:</span> Hi! Ask me about classworks, grades, or anything Sahayak.</div>
+        </div>
+        <div class="flex gap-2">
+          <input id="chatInput" class="flex-1 p-2 border rounded dark:bg-gray-800" placeholder="Type your question..."/>
+          <button onclick="sendChatMessage()" class="px-3 py-2 bg-indigo-600 text-white rounded">Send</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- CENTERED MODALS (cards) -->
+
+  <!-- LOGIN / ROLE modal (centered) -->
+  <div id="loginModal" class="hidden fixed inset-0 z-50 centered">
+    <div class="absolute inset-0 modal-backdrop"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-11/12 md:w-96 animate-fade-in">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold">Sign in / Switch role</h3>
+        <button onclick="closeLoginModal()" class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700">Close</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="small">Name</label>
+          <input id="loginName" class="w-full border p-2 rounded dark:bg-gray-800" placeholder="Your full name" />
+        </div>
+        <div>
+          <label class="small">Role</label>
+          <select id="loginRole" class="w-full border p-2 rounded dark:bg-gray-800">
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+          </select>
+        </div>
+        <div>
+          <label class="small">Email (optional)</label>
+          <input id="loginEmail" class="w-full border p-2 rounded dark:bg-gray-800" placeholder="you@school.edu" />
+        </div>
+        <div class="flex justify-end gap-2">
+          <button onclick="performLogin()" class="px-3 py-2 bg-indigo-600 text-white rounded">Sign in</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLASS modal -->
+  <div id="classModal" class="hidden fixed inset-0 z-50 centered">
+    <div class="absolute inset-0 modal-backdrop"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-11/12 md:w-3/4 lg:w-2/3 max-h-[85vh] overflow-y-auto animate-fade-in">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="classModalTitle" class="text-2xl font-bold">Class Name</h3>
+        <div class="flex gap-2">
+          <button onclick="closeClassModal()" class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700">Close</button>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <h4 class="font-semibold">Announcements</h4>
+        <div id="announcementsList" class="space-y-2 mt-2"></div>
+
+        <!-- editor controls (contenteditable based) -->
+        <div id="announceEditor" class="mt-3 hidden">
+          <div class="flex gap-1 mb-2">
+            <button class="px-2 py-1 bg-gray-100 rounded" onclick="formatEditor('bold')" title="Bold"><strong>B</strong></button>
+            <button class="px-2 py-1 bg-gray-100 rounded" onclick="formatEditor('italic')" title="Italic"><em>I</em></button>
+            <button class="px-2 py-1 bg-gray-100 rounded" onclick="formatEditor('underline')" title="Underline"><u>U</u></button>
+            <button class="px-2 py-1 bg-gray-100 rounded" onclick="formatEditor('insertUnorderedList')" title="List">• List</button>
+            <button class="px-2 py-1 bg-gray-100 rounded" onclick="promptLink()" title="Insert link">🔗</button>
+          </div>
+          <div id="announceEditorArea" class="editor" contenteditable="true" data-placeholder="Write announcement..."></div>
+          <div class="flex justify-end mt-2">
+            <button onclick="postAnnouncement()" class="px-3 py-2 bg-indigo-600 text-white rounded">Post Announcement</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <h4 class="font-semibold">Enrolled Students</h4>
+          <div id="enrolledList" class="mt-2 space-y-2"></div>
+        </div>
+
+        <div>
+          <h4 class="font-semibold">Classworks</h4>
+          <div id="modalClassworks" class="mt-2 space-y-3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBMISSIONS modal -->
+  <div id="submissionsModal" class="hidden fixed inset-0 z-50 centered">
+    <div class="absolute inset-0 modal-backdrop"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-11/12 md:w-2/3 lg:w-1/2 max-h-[80vh] overflow-y-auto animate-fade-in">
+      <div class="flex justify-between items-center mb-3">
+        <h3 id="modalTitle" class="text-lg font-bold">Submissions</h3>
+        <div class="flex gap-2 items-center">
+          <button onclick="closeSubmissionsModal()" class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700">Close</button>
+        </div>
+      </div>
+
+      <div id="submissionsList" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- UPLOAD modal -->
+  <div id="uploadModal" class="hidden fixed inset-0 z-50 centered">
+    <div class="absolute inset-0 modal-backdrop"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-11/12 md:w-1/2 animate-fade-in">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-lg font-bold">Submit Work</h3>
+        <button onclick="closeUploadModal()" class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700">Cancel</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="small">Student name</label>
+          <input id="uploadStudentName" class="w-full border p-2 rounded dark:bg-gray-800" />
+        </div>
+        <div>
+          <label class="small">File</label>
+          <input id="uploadFileInput" type="file" class="w-full" />
+        </div>
+        <div>
+          <label class="small">Comment</label>
+          <textarea id="uploadComment" class="w-full border p-2 rounded dark:bg-gray-800"></textarea>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button onclick="performUpload()" class="px-3 py-2 bg-green-600 text-white rounded">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MANUAL GRADE modal -->
+  <div id="manualGradeModal" class="hidden fixed inset-0 z-50 centered">
+    <div class="absolute inset-0 modal-backdrop"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-11/12 md:w-96 animate-fade-in">
+      <div class="flex justify-between items-center mb-3">
+        <h3 id="manualModalTitle" class="text-lg font-bold">Manual Grade</h3>
+        <button onclick="closeManualModal()" class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700">Close</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="small">Student</label>
+          <div id="manualStudent" class="font-semibold"></div>
+        </div>
+        <div>
+          <label class="small">File</label>
+          <div id="manualFile" class="text-sm text-gray-500"></div>
+        </div>
+        <div>
+          <label class="small">Grade (0-100)</label>
+          <input id="manualGradeInput" type="number" min="0" max="100" class="w-full border p-2 rounded dark:bg-gray-800" />
+        </div>
+        <div>
+          <label class="small">Feedback (optional)</label>
+          <textarea id="manualFeedback" class="w-full border p-2 rounded dark:bg-gray-800"></textarea>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button onclick="saveManualGrade()" class="px-3 py-2 bg-amber-500 text-white rounded">Save Grade</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMMENTS modal (contenteditable editor) -->
+  <div id="commentsModal" class="hidden fixed inset-0 z-50 centered">
+    <div class="absolute inset-0 modal-backdrop"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-11/12 md:w-2/3 animate-fade-in max-h-[80vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-3">
+        <h3 id="commentsModalTitle" class="text-lg font-bold">Comments</h3>
+        <button onclick="closeCommentsModal()" class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700">Close</button>
+      </div>
+
+      <div id="commentsThread" class="space-y-3 mb-3"></div>
+
+      <div class="mb-2">
+        <div class="flex gap-1 mb-2">
+          <button class="px-2 py-1 bg-gray-100 rounded" onclick="formatEditor('bold')" title="Bold"><strong>B</strong></button>
+          <button class="px-2 py-1 bg-gray-100 rounded" onclick="formatEditor('italic')" title="Italic"><em>I</em></button>
+          <button class="px-2 py-1 bg-gray-100 rounded" onclick="formatEditor('underline')" title="Underline"><u>U</u></button>
+          <button class="px-2 py-1 bg-gray-100 rounded" onclick="formatEditor('insertUnorderedList')" title="List">• List</button>
+          <button class="px-2 py-1 bg-gray-100 rounded" onclick="promptLink()" title="Link">🔗</button>
+        </div>
+        <div id="commentEditor" class="editor" contenteditable="true" data-placeholder="Write a comment..."></div>
+      </div>
+
+      <div class="flex justify-end">
+        <button onclick="postComment()" class="px-3 py-2 bg-indigo-600 text-white rounded">Post Comment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT: Application logic -->
+  <script>
+/* ===========================================================
+   Sahayak — Single-file SPA (Tailwind + Vanilla JS)
+   - All previous data retained and extended
+   - File upload persistence via localStorage (base64)
+   - Role-based login + modal forms (no prompt())
+   - Contenteditable mini rich-text editor for announcements/comments
+   - Centered modal cards, toasts, notifications, scheduled reminders
+   - Charts using Chart.js
+   =========================================================== */
+
+/* --------------------
+   LocalStorage helpers & state
+   -------------------- */
+const LS_KEY = 'sahayak_app_v1';
+function loadState(){
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+function saveState(){
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
+}
+
+/* uid */
+function uid(prefix='id'){ return prefix + '-' + Math.random().toString(36).slice(2,9); }
+
+/* initial demo data (keeps earlier structure) */
+const demo = {
+  currentUser: { name: null, role: 'student', email: null },
+  students: ['Aisha','Rahul','Mira','Sunil','Aarav','Ishita','Kabir','Meera','Arjun','Saanvi','Aryan','Riya','Vihaan','Kriti','Dev'],
+  classes: [
+    { id:'c-math', name:'Math 8A' },
+    { id:'c-sci',  name:'Science 8A' },
+    { id:'c-eng',  name:'English 8A' }
+  ],
+  classworks: [
+    { id:'cw-1', classId:'c-math', title:'Math Homework 1', type:'assignment', due:'2025-09-15', notes:'Practice on linear equations' },
+    { id:'cw-2', classId:'c-sci', title:'Science Test 1', type:'test', due:'2025-09-18', notes:'Chapters 1-3' },
+    { id:'cw-3', classId:'c-eng', title:'English Essay', type:'assignment', due:'2025-09-20', notes:'Write 500 words' },
+    { id:'cw-4', classId:'c-math', title:'Math Quiz 1', type:'test', due:'2025-09-12', notes:'Basics' },
+    { id:'cw-5', classId:'c-sci', title:'Lab Report 1', type:'assignment', due:'2025-09-21', notes:'Submit PDF' }
+  ],
+  announcements: {
+    'c-math': [{ id:'ann-1', html:'<p>Quiz on Friday — bring calculators.</p>', postedAt: new Date().toISOString(), by:'Mr. Sharma' }],
+    'c-sci':  [{ id:'ann-2', html:'<p>Lab partners assigned.</p>', postedAt: new Date().toISOString(), by:'Ms. Gupta' }],
+    'c-eng':  []
+  },
+  // submissions: each submission stores base64 in fileData for persistence
+  submissions: [],
+  comments: {}, // subId -> array of { id, author, html, at }
+  notifications: []
+};
+
+/* load or init */
+let stored = loadState();
+const state = stored || demo;
+
+/* ---------- utility: toasts & notifications ---------- */
+function showToast(msg, ms=3500){
+  const area = document.getElementById('toastArea');
+  const id = uid('t');
+  const n = document.createElement('div');
+  n.id = id;
+  n.className = 'p-3 bg-white dark:bg-gray-800 border shadow rounded text-sm';
+  n.textContent = msg;
+  area.appendChild(n);
+  setTimeout(()=> {
+    n.style.transition = 'opacity .3s, transform .3s';
+    n.style.opacity = '0';
+    n.style.transform = 'translateY(6px)';
+    setTimeout(()=> area.removeChild(n), 350);
+  }, ms);
+}
+
+function addNotification(text){
+  state.notifications = state.notifications || [];
+  state.notifications.unshift({ id: uid('n'), text, at: new Date().toISOString() });
+  saveState();
+  renderNotifications();
+}
+function clearNotifications(){ state.notifications = []; saveState(); renderNotifications(); }
+
+/* render notifications & badge */
+function renderNotifications(){
+  const list = document.getElementById('notifList');
+  list.innerHTML = '';
+  (state.notifications || []).slice(0,8).forEach(n=>{
+    const el = document.createElement('div');
+    el.className = 'p-2 border rounded dark:border-gray-700 text-sm';
+    el.innerHTML = `<div>${n.text}</div><div class="text-xs text-gray-400 mt-1">${new Date(n.at).toLocaleString()}</div>`;
+    list.appendChild(el);
+  });
+  const pending = Math.max(0, state.classworks.length - state.submissions.length);
+  const badge = document.getElementById('notifBadge');
+  if(pending > 0){ badge.textContent = pending; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
+}
+
+/* --------------------
+   Theme toggle & mobile menu
+   -------------------- */
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  document.documentElement.classList.toggle('dark');
+  document.getElementById('themeToggle').textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+});
+function toggleMobileMenu(){ document.getElementById('mobileMenu').classList.toggle('hidden'); }
+
+/* --------------------
+   Role / Login modal functions
+   -------------------- */
+function openLoginModal(){
+  document.getElementById('loginName').value = state.currentUser.name || '';
+  document.getElementById('loginRole').value = state.currentUser.role || 'student';
+  document.getElementById('loginEmail').value = state.currentUser.email || '';
+  document.getElementById('loginModal').classList.remove('hidden');
+}
+function closeLoginModal(){ document.getElementById('loginModal').classList.add('hidden'); }
+
+function performLogin(){
+  const name = document.getElementById('loginName').value.trim();
+  const role = document.getElementById('loginRole').value;
+  const email = document.getElementById('loginEmail').value.trim();
+  if(!name) return alert('Please enter your name');
+  state.currentUser = { name, role, email };
+  document.getElementById('profileName').textContent = name;
+  document.getElementById('roleSelect').value = role;
+  state.role = role; // for compatibility
+  saveState();
+  closeLoginModal();
+  showToast(`Signed in as ${name} (${role})`);
+  refreshAll();
+}
+
+/* set role manually from dropdown */
+function setRole(){
+  const r = document.getElementById('roleSelect').value;
+  state.currentUser = state.currentUser || {};
+  state.currentUser.role = r;
+  state.role = r;
+  saveState();
+  refreshAll();
+}
+
+/* --------------------
+   Centered modals: open/close class modal
+   -------------------- */
+let currentClassId = null;
+function openClassModal(classId){
+  currentClassId = classId;
+  document.getElementById('classModal').classList.remove('hidden');
+  const cls = state.classes.find(c=>c.id === classId);
+  document.getElementById('classModalTitle').textContent = cls.name;
+
+  // announcements
+  const annNode = document.getElementById('announcementsList'); annNode.innerHTML = '';
+  (state.announcements[classId] || []).forEach(a=>{
+    const el = document.createElement('div');
+    el.className = 'p-3 border rounded dark:border-gray-700';
+    el.innerHTML = `<div class="text-sm">${a.html}</div><div class="text-xs text-gray-400 mt-2">${a.by} • ${new Date(a.postedAt).toLocaleString()}</div>`;
+    annNode.appendChild(el);
+  });
+
+  // show editor only to teacher
+  const ae = document.getElementById('announceEditor');
+  if((state.currentUser && state.currentUser.role) === 'teacher') ae.classList.remove('hidden'); else ae.classList.add('hidden');
+
+  // enrolled students
+  const enrolled = document.getElementById('enrolledList'); enrolled.innerHTML = '';
+  state.students.forEach(s=>{
+    const row = document.createElement('div');
+    row.className = 'p-2 border rounded flex justify-between items-center dark:border-gray-700';
+    row.innerHTML = `<div class="font-medium">${s}</div><div class="text-xs text-gray-400">${s.slice(0,3).toUpperCase()}</div>`;
+    enrolled.appendChild(row);
+  });
+
+  // classworks
+  const cwNode = document.getElementById('modalClassworks'); cwNode.innerHTML = '';
+  state.classworks.filter(cw => cw.classId === classId).forEach(cw=>{
+    const subs = state.submissions.filter(s=>s.cwId === cw.id);
+    const submittedStudents = subs.map(s=>s.student);
+    const notSub = state.students.filter(st => !submittedStudents.includes(st));
+    const cwDiv = document.createElement('div');
+    cwDiv.className = 'p-3 border rounded dark:border-gray-700';
+    cwDiv.innerHTML = `<div class="flex justify-between items-start">
+      <div>
+        <div class="font-semibold">${cw.title} <span class="text-xs text-gray-500">(${cw.type})</span></div>
+        <div class="text-xs text-gray-400 mt-1">Due: ${cw.due}</div>
+      </div>
+      <div class="flex gap-2">
+        <button class="px-2 py-1 bg-indigo-600 text-white rounded text-sm" onclick="openSubmissions('${cw.id}')">View submissions (${subs.length})</button>
+        ${(state.currentUser && state.currentUser.role) === 'teacher' ? `<button class="px-2 py-1 bg-amber-500 text-white rounded text-sm" onclick="bulkMarkMissing('${cw.id}')">Mark missing</button>` : ''}
+        ${(state.currentUser && state.currentUser.role) === 'student' ? `<button class="px-2 py-1 bg-green-600 text-white rounded text-sm" onclick="startUpload('${cw.id}')">Submit</button>` : ''}
+      </div>
+    </div>
+    <div class="mt-2 text-sm">
+      <div><strong>Submitted:</strong> ${submittedStudents.slice(0,6).join(', ') || '—'}</div>
+      <div class="mt-1"><strong>Not submitted:</strong> ${notSub.slice(0,6).join(', ') || '—'}</div>
+    </div>`;
+    cwNode.appendChild(cwDiv);
+  });
+}
+function closeClassModal(){ document.getElementById('classModal').classList.add('hidden'); }
+
+/* --------------------
+   Announcement editor (contenteditable) helpers
+   -------------------- */
+function formatEditor(cmd){
+  document.execCommand(cmd, false, null);
+}
+function promptLink(){
+  const url = prompt('Enter URL (https://...)');
+  if(url) {
+    document.execCommand('createLink', false, url);
+  }
+}
+function postAnnouncement(){
+  const html = document.getElementById('announceEditorArea').innerHTML.trim();
+  if(!html || html === '<div><br></div>' || html === '') return alert('Write announcement');
+  const ann = { id: uid('ann'), html, postedAt: new Date().toISOString(), by: state.currentUser.name || 'Teacher' };
+  state.announcements[currentClassId] = state.announcements[currentClassId] || [];
+  state.announcements[currentClassId].unshift(ann);
+  saveState();
+  openClassModal(currentClassId);
+  document.getElementById('announceEditorArea').innerHTML = '';
+  addNotification(`${state.classes.find(c=>c.id===currentClassId).name}: New announcement`);
+  showToast('Announcement posted');
+}
+
+/* --------------------
+   Upload flow (localStorage base64)
+   -------------------- */
+let uploadTargetCW = null;
+function startUpload(cwId){
+  uploadTargetCW = cwId;
+  document.getElementById('uploadStudentName').value = state.currentUser.name || '';
+  document.getElementById('uploadComment').value = '';
+  document.getElementById('uploadFileInput').value = '';
+  document.getElementById('uploadModal').classList.remove('hidden');
+}
+function closeUploadModal(){ document.getElementById('uploadModal').classList.add('hidden'); uploadTargetCW = null; }
+
+function performUpload(){
+  const student = document.getElementById('uploadStudentName').value.trim() || (state.currentUser.name || state.students[0]);
+  const fileInput = document.getElementById('uploadFileInput');
+  if(!fileInput.files || fileInput.files.length === 0) return alert('Choose a file to upload');
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const dataUrl = e.target.result; // data:*;base64,....
+    const base64 = dataUrl.split(',')[1];
+    const submission = {
+      id: uid('sub'),
+      cwId: uploadTargetCW,
+      student,
+      filename: file.name,
+      fileData: base64,
+      fileType: file.type || 'application/octet-stream',
+      submittedAt: new Date().toISOString(),
+      aiScore: simulateAIGrade(file),
+      teacherScore: null,
+      gradedBy: 'AI'
+    };
+    state.submissions.push(submission);
+    saveState();
+    addNotification(`${student} submitted ${submission.filename}`);
+    closeUploadModal();
+    refreshAll();
+    showToast(`Submitted — AI graded ${submission.aiScore}%`);
+  };
+  reader.readAsDataURL(file);
+}
+
+/* simulate ai grade */
+function simulateAIGrade(file){ return Math.round(45 + Math.random()*50); }
+
+/* --------------------
+   Submissions modal + teacher view
+   -------------------- */
+let currentSubCW = null;
+function openSubmissions(cwId){
+  currentSubCW = cwId;
+  document.getElementById('submissionsModal').classList.remove('hidden');
+  document.getElementById('modalTitle').textContent = `Submissions — ${(state.classworks.find(c=>c.id===cwId)||{}).title || cwId}`;
+  renderSubmissionsList();
+}
+
+function renderSubmissionsList(){
+  const list = document.getElementById('submissionsList'); list.innerHTML = '';
+  const subs = state.submissions.filter(s => s.cwId === currentSubCW);
+  if(subs.length === 0) list.innerHTML = '<div class="text-sm text-gray-500">No submissions yet.</div>';
+  subs.forEach(s => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'p-3 border rounded flex flex-col md:flex-row md:items-center md:justify-between gap-3 dark:border-gray-700';
+    const left = document.createElement('div');
+    left.innerHTML = `<div class="font-semibold">${s.student}</div>
+      <div class="text-xs text-gray-400">${new Date(s.submittedAt).toLocaleString()}</div>
+      <div class="text-xs mt-1">${s.filename}</div>`;
+    const right = document.createElement('div');
+    right.className = 'flex items-center gap-2';
+    const badgeClass = badgeForScore(s.teacherScore ?? s.aiScore);
+    right.innerHTML = `<div class="${badgeClass} px-2 py-1 rounded text-xs font-semibold">${s.teacherScore ?? s.aiScore}% <span class="text-[10px] ml-1">${s.gradedBy}</span></div>
+      <button class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-sm" onclick="downloadSubmission('${s.id}')">Download</button>
+      <button class="px-2 py-1 rounded bg-amber-500 text-white text-sm" onclick="openManualModal('${s.id}')">Manual Grade</button>
+      <button class="px-2 py-1 rounded bg-sky-600 text-white text-sm" onclick="openCommentsModal('${s.id}')">Comments</button>`;
+    wrapper.appendChild(left);
+    wrapper.appendChild(right);
+    list.appendChild(wrapper);
+  });
+
+  // show not submitted
+  const submitted = subs.map(s => s.student);
+  const notSubmitted = state.students.filter(st => !submitted.includes(st));
+  if(notSubmitted.length){
+    const header = document.createElement('div'); header.className = 'text-sm text-gray-500 mt-3'; header.textContent = 'Not Submitted:';
+    list.appendChild(header);
+    notSubmitted.forEach(ns=>{
+      const el = document.createElement('div'); el.className = 'p-2 border rounded dark:border-gray-700 flex justify-between'; el.innerHTML = `<div>${ns}</div><div class="text-xs text-gray-400">—</div>`;
+      list.appendChild(el);
+    });
+  }
+}
+
+function closeSubmissionsModal(){ document.getElementById('submissionsModal').classList.add('hidden'); }
+
+/* badge helper */
+function badgeForScore(score){
+  if(score === null || score === undefined) return 'bg-gray-400 text-gray-800';
+  if(score < 50) return 'bg-red-500 text-white';
+  if(score < 75) return 'bg-amber-400 text-black';
+  return 'bg-emerald-500 text-white';
+}
+
+/* --------------------
+   Download submission (rebuild blob from base64)
+   -------------------- */
+function downloadSubmission(subId){
+  const s = state.submissions.find(x=>x.id === subId);
+  if(!s) return alert('Submission not found');
+  if(s.fileData){
+    const byteCharacters = atob(s.fileData);
+    const byteNumbers = new Array(byteCharacters.length);
+    for(let i=0;i<byteCharacters.length;i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: s.fileType || 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = s.filename; document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    return;
+  }
+  alert('File not available');
+}
+
+/* --------------------
+   Manual grade modal (form instead of prompt)
+   -------------------- */
+let manualSubId = null;
+function openManualModal(subId){
+  manualSubId = subId;
+  const s = state.submissions.find(x=>x.id===subId);
+  if(!s) return alert('Not found');
+  document.getElementById('manualStudent').textContent = s.student;
+  document.getElementById('manualFile').textContent = s.filename;
+  document.getElementById('manualGradeInput').value = s.teacherScore ?? s.aiScore ?? '';
+  document.getElementById('manualFeedback').value = s.feedback ?? '';
+  document.getElementById('manualGradeModal').classList.remove('hidden');
+}
+function closeManualModal(){ document.getElementById('manualGradeModal').classList.add('hidden'); manualSubId = null; }
+
+function saveManualGrade(){
+  const v = Number(document.getElementById('manualGradeInput').value);
+  if(isNaN(v) || v < 0 || v > 100) return alert('Enter valid grade 0-100');
+  const feedback = document.getElementById('manualFeedback').value.trim();
+  const s = state.submissions.find(x=>x.id === manualSubId);
+  s.teacherScore = Math.round(v);
+  s.gradedBy = state.currentUser.name || 'Teacher';
+  s.feedback = feedback;
+  saveState();
+  closeManualModal();
+  renderSubmissionsList();
+  addNotification(`Manual graded ${s.student}: ${s.teacherScore}%`);
+  showToast('Manual grade saved');
+}
+
+/* --------------------
+   Comments modal & posting (contenteditable)
+   -------------------- */
+let commentSubId = null;
+function openCommentsModal(subId){
+  commentSubId = subId;
+  const s = state.submissions.find(x=>x.id===subId);
+  if(!s) return alert('Not found');
+  document.getElementById('commentsModalTitle').textContent = `Comments — ${s.student} • ${s.filename}`;
+  document.getElementById('commentsModal').classList.remove('hidden');
+  renderCommentsThread();
+  document.getElementById('commentEditor').innerHTML = '';
+}
+
+function closeCommentsModal(){ document.getElementById('commentsModal').classList.add('hidden'); commentSubId = null; }
+
+function renderCommentsThread(){
+  const thread = state.comments[commentSubId] || [];
+  const container = document.getElementById('commentsThread'); container.innerHTML = '';
+  if(thread.length === 0) container.innerHTML = '<div class="text-sm text-gray-500">No comments yet.</div>';
+  thread.forEach(c=>{
+    const el = document.createElement('div'); el.className = 'p-2 border rounded dark:border-gray-700';
+    el.innerHTML = `<div class="font-semibold">${c.author}</div><div class="text-xs text-gray-400">${new Date(c.at).toLocaleString()}</div><div class="mt-1">${c.html}</div>`;
+    container.appendChild(el);
+  });
+}
+
+function postComment(){
+  const html = document.getElementById('commentEditor').innerHTML.trim();
+  if(!html || html === '<div><br></div>' ) return alert('Write a comment');
+  const comment = { id: uid('cmt'), author: state.currentUser.name || 'User', html, at: new Date().toISOString() };
+  state.comments[commentSubId] = state.comments[commentSubId] || [];
+  state.comments[commentSubId].push(comment);
+  saveState();
+  renderCommentsThread();
+  addNotification(`Comment by ${comment.author}`);
+  showToast('Comment posted');
+}
+
+/* --------------------
+   Bulk mark missing helper (teacher)
+   -------------------- */
+function bulkMarkMissing(cwId){
+  if((state.currentUser && state.currentUser.role) !== 'teacher') return alert('Only teachers');
+  const existing = state.submissions.filter(s=>s.cwId === cwId).map(s=>s.student);
+  let added = 0;
+  state.students.forEach(st => {
+    if(!existing.includes(st)){
+      state.submissions.push({
+        id: uid('sub'),
+        cwId,
+        student: st,
+        filename: 'MISSING',
+        fileData: btoa(unescape(encodeURIComponent('MISSING'))),
+        fileType: 'text/plain',
+        submittedAt: new Date().toISOString(),
+        aiScore: 0,
+        teacherScore: 0,
+        gradedBy: 'Teacher'
+      });
+      added++;
+    }
+  });
+  if(added) { saveState(); addNotification(`Marked ${added} missing for classwork`); showToast('Marked missing'); }
+  renderSubmissionsList();
+}
+
+/* --------------------
+   Analytics & charts (Chart.js)
+   -------------------- */
+let aiChart = null, leaderboardChart = null, reportChart = null;
+function renderAnalytics(){
+  const ctx = document.getElementById('aiChart').getContext('2d');
+  const labels = state.classworks.map(cw => cw.title);
+  const data = state.classworks.map(cw => {
+    const subs = state.submissions.filter(s=>s.cwId === cw.id);
+    if(subs.length === 0) return 0;
+    const avg = subs.reduce((a,b)=>a + (b.aiScore ?? 0), 0) / subs.length;
+    return Math.round(avg);
+  });
+  if(aiChart) aiChart.destroy();
+  aiChart = new Chart(ctx, { type:'bar', data:{ labels, datasets:[{ label:'Avg AI Score %', data, backgroundColor: labels.map(()=> 'rgba(99,102,241,0.85)') }]}, options:{ responsive:true, scales:{ y:{ beginAtZero:true, max:100 }}}});
+
+  // leaderboard
+  const map = {};
+  state.submissions.forEach(s=>{
+    const score = s.teacherScore ?? s.aiScore ?? 0;
+    if(!map[s.student]) map[s.student] = [];
+    map[s.student].push(score);
+  });
+  const arr = Object.entries(map).map(([student,scores]) => ({ student, avg: Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) }));
+  arr.sort((a,b)=>b.avg-a.avg);
+  const top = arr.slice(0,5);
+  const ctx2 = document.getElementById('leaderboardChart').getContext('2d');
+  if(leaderboardChart) leaderboardChart.destroy();
+  leaderboardChart = new Chart(ctx2, { type:'bar', data:{ labels: top.map(t=>t.student), datasets:[{ label:'Avg %', data: top.map(t=>t.avg), backgroundColor: ['#f97316','#f59e0b','#10b981','#8b5cf6','#6366f1'] }]}, options:{ responsive:true }});
+  document.getElementById('topPerformer').textContent = top[0] ? `${top[0].student} (${top[0].avg}%)` : '—';
+}
+
+/* --------------------
+   Reports (per-student line chart)
+   -------------------- */
+function refreshStudentListInReports(){
+  const sel = document.getElementById('reportStudent');
+  if(!sel) return;
+  sel.innerHTML = '';
+  const students = [...new Set(state.submissions.map(s=>s.student))];
+  (students.length ? students : state.students).forEach(st => {
+    const opt = document.createElement('option'); opt.value = st; opt.textContent = st; sel.appendChild(opt);
+  });
+}
+function renderReportChart(){
+  const student = document.getElementById('reportStudent')?.value;
+  if(!student) return;
+  const subs = state.submissions.filter(s => s.student === student);
+  const labels = subs.map(s => state.classworks.find(c=>c.id===s.cwId)?.title || s.cwId);
+  const scores = subs.map(s => s.teacherScore ?? s.aiScore ?? 0);
+  const ctx = document.getElementById('reportChart').getContext('2d');
+  if(reportChart) reportChart.destroy();
+  reportChart = new Chart(ctx, { type:'line', data:{ labels, datasets:[{ label: `${student}'s Scores`, data: scores, borderColor: 'rgba(59,130,246,1)', tension:0.25, fill:false }]}, options:{ responsive:true, scales:{ y:{ beginAtZero:true, max:100 }}}});
+}
+
+/* --------------------
+   Search & classworks rendering
+   -------------------- */
+function globalSearch(){
+  const q = (document.getElementById('globalSearch')?.value || '').toLowerCase().trim();
+  if(!q) { refreshAll(); return; }
+  if(state.students.map(s=>s.toLowerCase()).includes(q)){
+    showPage('reports');
+    document.getElementById('reportStudent').value = state.students.find(s=>s.toLowerCase()===q);
+    renderReportChart();
+    return;
+  }
+  showPage('myclassrooms');
+  document.getElementById('cwSearch').value = q;
+  refreshClassworkList();
+}
+
+function refreshClassworkList(){
+  const grid = document.getElementById('classworkGrid'); grid.innerHTML = '';
+  const search = (document.getElementById('cwSearch')?.value || '').toLowerCase();
+  const filter = document.getElementById('cwFilter')?.value || 'all';
+  state.classworks.forEach(cw=>{
+    if(filter !== 'all' && cw.type !== filter) return;
+    if(search && !(`${cw.title} ${cw.notes}`.toLowerCase().includes(search))) return;
+    const cls = state.classes.find(x=>x.id === cw.classId) || { name: 'Unknown' };
+    const card = document.createElement('div');
+    card.className = 'bg-white dark:bg-gray-800 p-5 rounded shadow hover:shadow-lg transition flex flex-col';
+    card.innerHTML = `<div class="flex justify-between items-start gap-3">
+      <div>
+        <h4 class="font-semibold">${cw.title}</h4>
+        <p class="text-sm text-gray-500 dark:text-gray-400">${cls.name} • ${cw.type.toUpperCase()}</p>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300 truncate-2">${cw.notes}</p>
+        <p class="mt-1 text-xs text-gray-400">Due: ${cw.due}</p>
+      </div>
+      <div class="flex flex-col items-end gap-2">
+        <span class="${cw.type==='test' ? 'px-2 py-1 bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-200 rounded text-xs' : 'px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 rounded text-xs'}">${cw.type}</span>
+        <div class="flex gap-2">
+          ${(state.currentUser && state.currentUser.role) === 'student' ? `<button class="px-3 py-1 bg-green-600 text-white rounded text-sm" onclick="startUpload('${cw.id}')">Submit Work</button>` : `<button class="px-3 py-1 bg-indigo-600 text-white rounded text-sm" onclick="openSubmissions('${cw.id}')">View Submissions</button>`}
+          <button class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-sm rounded" onclick="openClassModal('${cw.classId}')">Open Class</button>
+        </div>
+      </div>
+    </div>`;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('statClasses').textContent = state.classes.length;
+  const pending = Math.max(0, state.classworks.length - state.submissions.length);
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statAvg').textContent = computeAverageScore() + '%';
+  renderRecentList();
+  renderClassesArea();
+  renderJointGrid();
+}
+
+/* recent list & classes area */
+function renderRecentList(){
+  const node = document.getElementById('recentList'); node.innerHTML = '';
+  state.classworks.slice(0,6).forEach(cw=>{
+    const el = document.createElement('div');
+    el.className = 'flex items-center justify-between gap-3 p-2 rounded border dark:border-gray-700';
+    const cls = state.classes.find(x=>x.id===cw.classId)?.name || 'Unknown';
+    const submissionsCount = state.submissions.filter(s => s.cwId === cw.id).length;
+    el.innerHTML = `<div><div class="font-medium">${cw.title}</div><div class="text-xs text-gray-500 dark:text-gray-400">${cls} • due ${cw.due}</div></div><div class="text-sm text-gray-600 dark:text-gray-300">${submissionsCount} submitted</div>`;
+    node.appendChild(el);
+  });
+}
+
+function renderClassesArea(){
+  const area = document.getElementById('classesListArea'); area.innerHTML = '';
+  state.classes.forEach(cl=>{
+    const cwCount = state.classworks.filter(cw => cw.classId === cl.id).length;
+    const card = document.createElement('div');
+    card.className = 'bg-white dark:bg-gray-800 p-4 rounded shadow cursor-pointer hover:shadow-lg transition';
+    card.innerHTML = `<div class="flex justify-between items-start">
+      <div><h4 class="font-semibold">${cl.name}</h4><div class="text-xs text-gray-500 dark:text-gray-400 mt-1">${cwCount} classworks • ${state.students.length} students</div></div>
+      <div class="flex flex-col gap-2"><button class="px-2 py-1 rounded bg-indigo-600 text-white text-sm" onclick="openClassModal('${cl.id}')">Open</button></div>
+    </div>`;
+    area.appendChild(card);
+  });
+}
+
+function renderJointGrid(){
+  const grid = document.getElementById('jointGrid'); grid.innerHTML = '';
+  state.classes.forEach(cl=>{
+    const card = document.createElement('div'); card.className = 'bg-white dark:bg-gray-800 p-4 rounded-lg shadow hover:shadow-lg transition';
+    card.innerHTML = `<h4 class="font-semibold">${cl.name}</h4><p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Shared with multiple teachers</p><div class="mt-3 flex gap-2"><button class="px-2 py-1 bg-indigo-600 text-white rounded" onclick="openClassModal('${cl.id}')">Open</button></div>`;
+    grid.appendChild(card);
+  });
+}
+
+/* compute average */
+function computeAverageScore(){
+  if(!state.submissions || state.submissions.length === 0) return 0;
+  const sum = state.submissions.reduce((a,b) => a + (b.teacherScore ?? b.aiScore ?? 0), 0);
+  return Math.round(sum / state.submissions.length);
+}
+
+/* --------------------
+   Export CSV helpers
+   -------------------- */
+function exportAllSubmissionsCSV(){
+  const rows = [['SubmissionID','Classwork','Student','Filename','SubmittedAt','AI Score','Teacher Score','GradedBy']];
+  state.submissions.forEach(s=>{
+    const cw = state.classworks.find(c=>c.id === s.cwId);
+    rows.push([s.id, (cw?cw.title:s.cwId), s.student, s.filename, new Date(s.submittedAt).toLocaleString(), s.aiScore ?? '', s.teacherScore ?? '', s.gradedBy ?? '']);
+  });
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'submissions_report.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+function exportStudentCSV(){
+  const student = document.getElementById('reportStudent')?.value;
+  if(!student) return alert('Select student');
+  const rows = [['SubmissionID','Classwork','Student','Filename','SubmittedAt','AI Score','Teacher Score','GradedBy']];
+  state.submissions.filter(s=>s.student===student).forEach(s=>{
+    const cw = state.classworks.find(c=>c.id === s.cwId);
+    rows.push([s.id, (cw?cw.title:s.cwId), s.student, s.filename, new Date(s.submittedAt).toLocaleString(), s.aiScore ?? '', s.teacherScore ?? '', s.gradedBy ?? '']);
+  });
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `${student}_submissions.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+/* --------------------
+   Chatbot simulation (simple)
+   -------------------- */
+function sendChatMessage(){
+  const input = document.getElementById('chatInput');
+  const box = document.getElementById('chatbox');
+  if(!input.value.trim()) return;
+  box.innerHTML += `<div class="mb-2"><strong>You:</strong> ${escapeHtml(input.value)}</div>`;
+  const reply = document.createElement('div'); reply.className = 'mb-2'; reply.innerHTML = `<strong>AI:</strong> <span id="typing">...</span>`;
+  box.appendChild(reply);
+  box.scrollTop = box.scrollHeight;
+  const text = `Try opening the class or checking the rubric for "${input.value}".`;
+  let i=0;
+  const t = setInterval(()=> {
+    const el = reply.querySelector('#typing');
+    if(!el) { clearInterval(t); return; }
+    el.textContent += text[i] || '';
+    i++;
+    if(i >= text.length) clearInterval(t);
+  }, 18);
+  input.value = '';
+}
+
+/* escape small helper */
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* --------------------
+   Scheduled reminders (demo)
+   -------------------- */
+function scheduleReminders(){
+  // check every 20 seconds for due dates within 48 hours (demo fast)
+  setInterval(()=>{
+    const now = new Date();
+    state.classworks.forEach(cw => {
+      if(!cw.due) return;
+      const dueDate = new Date(cw.due + 'T00:00:00');
+      const hours = (dueDate - now) / (1000*60*60);
+      if(hours > 0 && hours < 48){
+        // prevent duplicate reminder: check if similar notif exists
+        const key = `reminder:${cw.id}`;
+        if(!state.notifications.some(n => n.text.includes(key))){
+          const message = `Reminder: ${cw.title} due ${cw.due} • ${key}`;
+          addNotification(message);
+          showToast(message, 5000);
+        }
+      }
+    });
+  }, 20*1000);
+}
+
+/* --------------------
+   Init & refresh logic
+   -------------------- */
+function refreshAll(){
+  refreshClassworkList();
+  renderClassesArea();
+  renderJointGrid();
+  renderRecentList();
+  renderNotifications();
+  refreshStudentListInReports();
+  renderAnalytics();
+  saveState();
+}
+function refreshStudentListInReports(){
+  const sel = document.getElementById('reportStudent');
+  if(!sel) return;
+  sel.innerHTML = '';
+  const students = [...new Set(state.submissions.map(s=>s.student))];
+  (students.length ? students : state.students).forEach(st => {
+    const opt = document.createElement('option'); opt.value = st; opt.textContent = st; sel.appendChild(opt);
+  });
+}
+
+/* page switching */
+function showPage(id){
+  const pages = ['dashboard','myclassrooms','jointclassrooms','analytics','reports','chatbot'];
+  pages.forEach(p => { const el = document.getElementById(p); if(el) el.classList.add('hidden'); });
+  document.getElementById(id).classList.remove('hidden');
+  window.scrollTo({ top:0, behavior:'smooth' });
+  if(id === 'analytics') renderAnalytics();
+  if(id === 'reports') renderReportChart();
+}
+
+/* auto-hide modals on outside click (simple) */
+document.addEventListener('click', (e) => {
+  // close small popovers if clicked outside
+  const loginModal = document.getElementById('loginModal');
+  if(loginModal && !loginModal.contains(e.target) && !document.getElementById('profileBtn').contains(e.target)) loginModal.classList.add('hidden');
+  const np = document.getElementById('notifPanel');
+  if(np && !np.contains(e.target) && !document.getElementById('notifBtn').contains(e.target)) np.classList.add('hidden');
+});
+
+/* --------------------
+   Boot: create some demo submissions if none present
+   -------------------- */
+if(!state.submissions || state.submissions.length === 0){
+  function demoSub(cwId, student, filename, grade){
+    const content = `Demo file for ${student} - ${filename}`;
+    const base = btoa(unescape(encodeURIComponent(content)));
+    return { id: uid('sub'), cwId, student, filename, fileData: base, fileType:'text/plain', submittedAt: new Date(Date.now() - Math.random()*1e7).toISOString(), aiScore: grade ?? Math.round(45 + Math.random()*50), teacherScore: null, gradedBy: 'AI' };
+  }
+  state.submissions = [
+    demoSub('cw-1','Aisha','math_aisha.pdf',85),
+    demoSub('cw-1','Rahul','math_rahul.docx',72),
+    demoSub('cw-2','Mira','sci_mira.pdf',78),
+    demoSub('cw-3','Sunil','eng_sunil.doc',65),
+    demoSub('cw-4','Kabir','quiz_kabir.pdf',55),
+    demoSub('cw-5','Ishita','lab_ishita.pdf',95)
+  ];
+  saveState();
+}
+
+/* launch reminders & initial rendering */
+scheduleReminders();
+refreshAll();
+showPage('dashboard');
+
+  </script>
+
+</body>
+</html>

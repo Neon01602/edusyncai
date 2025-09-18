@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sahayak.AI · Teacher Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+  <style>
+    :root { --surface: #020617; --card: #111b3e; }
+
+    body {
+      background:
+        radial-gradient(ellipse 140% 60% at 50% 115%, #001a33 0%, transparent 70%),
+        linear-gradient(to top, #000000 0%, #020617 45%, #001a33 100%);
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-size: cover;
+      animation: glowMotion 14s ease-in-out infinite alternate;
+      font-family: 'DM Sans', sans-serif;
+      color: #fff;
+    }
+
+    @keyframes glowMotion {
+      0% { background-position: 50% 100%, 50% 0%; }
+      100% { background-position: 50% 100%, 50% 100%; }
+    }
+    /* Thin scrollbar for modal content */
+.custom-scroll {
+  scrollbar-width: thin;              /* Firefox */
+  scrollbar-color: #3b82f6 #1e293b;   /* thumb + track */
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;   /* thin scrollbar */
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: #1e293b;   /* track color */
+  border-radius: 9999px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background-color: #3b82f6;  /* thumb color */
+  border-radius: 9999px;
+}
+
+
+    .tab-btn.active { border-bottom: 2px solid #38bdf8; color: #38bdf8; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Header Navbar -->
+  <header class="fixed top-0 left-0 right-0 h-14 flex items-center justify-between px-4 md:px-8 shadow-md z-50 border-b border-white/20"
+          style="background: var(--surface);">
+    
+    <!-- Left: Logo -->
+    <div class="flex items-center gap-2">
+      <img src="/static/images/logo (3).png" alt="Sahayak.AI" class="w-10 h-10 rounded-full border border-gray-600" />
+      <span class="hidden sm:block text-white text-lg font-medium">Sahayak.AI</span>
+    </div>
+
+    <!-- Right: Profile -->
+    <div class="flex items-center gap-3 relative" id="desktopUserMenu">
+      <img id="profileImage" src="/static/default-profile.png" alt="User Profile"
+           class="w-9 h-9 rounded-full object-cover border border-gray-600 cursor-pointer"/>
+      <button id="userMenuButton" class="flex items-center gap-1 text-sm text-white font-medium">
+        <span id="userName">Loading...</span>
+        <i class="ri-arrow-down-s-line text-gray-400"></i>
+      </button>
+
+      <!-- Dropdown -->
+      <div id="userDropdown"
+           class="hidden absolute right-0 top-full mt-2 w-44 bg-gray-900 rounded-lg shadow-2xl py-2 
+                  border border-gray-700 text-sm z-[70]">
+        <a href="{% url 'profile' %}" class="block px-4 py-2 text-gray-300 hover:bg-gray-700">Profile</a>
+        <a href="{% url 'settings' %}" class="block px-4 py-2 text-gray-300 hover:bg-gray-700">Settings</a>
+        <form method="POST" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700">
+            Sign out
+          </button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="pt-20 px-3 md:px-8 pb-10 space-y-6">
+
+    <!-- Classroom Info -->
+    <section>
+      <h2 class="text-2xl font-semibold">{{ classroom.name }} <span class="text-blue-400">({{ classroom.subject }})</span></h2>
+      <p class="text-gray-400 text-sm">{{ classroom.students.count }} students enrolled</p>
+    </section>
+
+    <!-- Classworks -->
+    <!-- Classworks -->
+<section>
+  <h3 class="text-xl font-semibold mb-4">Classworks</h3>
+
+  <!-- Searchbar -->
+  <div class="relative mb-6 max-w-lg">
+    <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+    <input 
+      id="classworkSearch" 
+      type="text" 
+      placeholder="Search classworks..." 
+      class="w-full pl-10 pr-3 py-2 rounded-lg bg-gray-800/70 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+    />
+  </div>
+
+  {% if classworks_data %}
+    <div id="classworkContainer" class="space-y-4">
+      {% for item in classworks_data %}
+      <div class="bg-[var(--card)] rounded-2xl shadow-md border border-gray-700">
+        
+        <!-- Dropdown Label -->
+        <button 
+          onclick="toggleDropdown('cw-{{ forloop.counter }}')" 
+          class="w-full flex justify-between items-center p-4 text-left focus:outline-none hover:bg-gray-800/50 transition rounded-t-2xl"
+        >
+          <div>
+            <h4 class="text-lg font-medium text-white/90">{{ item.work.title }}</h4>
+            <p class="text-gray-400 text-xs">{{ item.work.category }}</p>
+          </div>
+          <i id="icon-cw-{{ forloop.counter }}" class="ri-arrow-down-s-line text-lg text-gray-400 transition-transform"></i>
+        </button>
+        
+        <!-- Dropdown Content -->
+        <div id="cw-{{ forloop.counter }}" class="hidden border-t border-gray-700">
+          <div class="p-4">
+
+            <p class="text-gray-300 text-sm mb-4 leading-relaxed">{{ item.work.description }}</p>
+
+            <!-- Submissions Table -->
+            <div class="hidden md:block overflow-x-auto rounded-lg border border-gray-700">
+              <table class="min-w-full divide-y divide-gray-700 text-sm">
+                <thead class="bg-[#1a2245]">
+                  <tr>
+                    <th class="px-3 py-2 text-left text-gray-300 text-xs">Student</th>
+                    <th class="px-3 py-2 text-left text-gray-300 text-xs">Status</th>
+                    <th class="px-3 py-2 text-left text-gray-300 text-xs">Grade</th>
+                    <th class="px-3 py-2 text-left text-gray-300 text-xs">Submission</th>
+                    <th class="px-3 py-2"></th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700">
+                  {% for sd in item.students_data %}
+                  <tr id="row-{{ sd.submission.id }}" class="hover:bg-gray-800/30 transition">
+                    <td class="px-3 py-2">{{ sd.student.username }}</td>
+                    <td class="px-3 py-2" id="status-{{ sd.submission.id }}">
+                      {% if sd.submission %}
+                        {% if sd.submission.status == "pending" %}
+                          <span class="px-2 py-1 rounded-full bg-yellow-500 text-black text-xs font-semibold">Pending</span>
+                        {% elif sd.submission.status == "graded" %}
+                          <span class="px-2 py-1 rounded-full bg-green-500 text-white text-xs font-semibold">Approved</span>
+                        {% else %}
+                          <span class="px-2 py-1 rounded-full bg-gray-600 text-white text-xs font-semibold">{{ sd.submission.status }}</span>
+                        {% endif %}
+                      {% else %}
+                        <span class="px-2 py-1 rounded-full bg-red-500 text-white text-xs font-semibold">Not Submitted</span>
+                      {% endif %}
+                    </td>
+                    <td id="feedback-{{ sd.submission.id }}" class="px-3 py-2 text-green-400 font-medium">
+                      {% if sd.submission.ai_grade %}{{ sd.submission.ai_grade }}{% endif %}
+                    </td>
+                    <td class="px-3 py-2">
+                      {% if sd.submission and sd.submission.file %}
+                        <a href="{{ sd.submission.file.url }}" target="_blank" class="text-blue-400 hover:underline">Download</a>
+                      {% else %}-{% endif %}
+                    </td>
+                    <td class="px-3 py-2 text-right">
+                      {% if sd.submission %}
+                        <button class="bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded-lg text-xs font-medium transition"
+                                onclick="openAnalysisModal('{{ sd.submission.id }}')">
+                          <i class="ri-search-eye-line"></i>
+                        </button>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="space-y-3 md:hidden mt-3">
+              {% for sd in item.students_data %}
+              <div class="p-3 rounded-lg bg-[#1a2245] flex flex-col gap-2 shadow-md border border-gray-700">
+                <div class="flex justify-between items-center">
+                  <p class="font-medium">{{ sd.student.username }}</p>
+                  {% if sd.submission %}
+                    {% if sd.submission.status == "pending" %}
+                      <span class="px-2 py-0.5 rounded-full bg-yellow-500 text-black text-xs font-semibold">Pending</span>
+                    {% elif sd.submission.status == "graded" %} 
+                      <span class="px-2 py-0.5 rounded-full bg-green-500 text-white text-xs font-semibold">Approved</span>
+                    {% else %}
+                      <span class="px-2 py-0.5 rounded-full bg-gray-600 text-white text-xs font-semibold">{{ sd.submission.status }}</span>
+                    {% endif %}
+                  {% else %}
+                    <span class="px-2 py-0.5 rounded-full bg-red-500 text-white text-xs font-semibold">Not Submitted</span>
+                  {% endif %}
+                </div>
+                <div class="text-sm text-gray-300">
+                  <p><span class="font-semibold">Grade:</span> {% if sd.submission.ai_grade %}{{ sd.submission.ai_grade }}{% else %}-{% endif %}</p>
+                  <p>
+                    {% if sd.submission and sd.submission.file %}
+                      <a href="{{ sd.submission.file.url }}" target="_blank" class="text-blue-400 hover:underline">Download</a>
+                    {% else %}-{% endif %}
+                  </p>
+                </div>
+                {% if sd.submission %}
+                <button class="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded-lg text-xs font-medium transition"
+                        onclick="openAnalysisModal('{{ sd.submission.id }}')">
+                  Analyze
+                </button>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-gray-500 text-sm">No classworks created yet.</p>
+  {% endif %}
+</section>
+<script>
+  // Toggle dropdown
+  function toggleDropdown(id) {
+    const el = document.getElementById(id);
+    const icon = document.getElementById("icon-" + id);
+    if (el.classList.contains("hidden")) {
+      el.classList.remove("hidden");
+      icon.classList.add("rotate-180");
+    } else {
+      el.classList.add("hidden");
+      icon.classList.remove("rotate-180");
+    }
+  }
+
+  // Search classworks
+  document.getElementById("classworkSearch").addEventListener("input", function() {
+    const term = this.value.toLowerCase();
+    const cards = document.querySelectorAll("#classworkContainer > div");
+    cards.forEach(card => {
+      const title = card.querySelector("h4").innerText.toLowerCase();
+      card.style.display = title.includes(term) ? "block" : "none";
+    });
+  });
+</script>
+
+  </main>
+
+  <!-- Modal -->
+  <!-- Modal -->
+<div id="analysisModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+  <div class="bg-[#0b122d] w-full md:w-2/3 lg:w-1/2 max-h-[90vh] rounded-2xl p-5 md:p-6 relative flex flex-col shadow-xl border border-white/20">
+    
+    <!-- Close -->
+    <button onclick="closeAnalysisModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl">
+      <i class="ri-close-line"></i>
+    </button>
+
+    <!-- Title -->
+    <h2 class="text-lg md:text-xl font-semibold mb-4">Submission Analysis</h2>
+
+    <!-- Tabs -->
+    <div class="flex space-x-6 border-b border-gray-700 mb-4">
+      <button class="tab-btn px-3 py-2 text-sm active" onclick="showTab('summary', this)">Summary</button>
+      <button class="tab-btn px-3 py-2 text-sm" onclick="showTab('feedback', this)">Feedback</button>
+    </div>
+
+    <!-- Content (scrollable only here) -->
+    <div class="flex-1 overflow-y-auto pr-1 space-y-3 text-sm leading-relaxed custom-scroll">
+      <div id="tab-summary" class="tab-content">Loading...</div>
+      <div id="tab-feedback" class="tab-content hidden flex flex-col space-y-2">
+        <textarea id="feedbackText" class="w-full p-3 rounded bg-gray-800 text-white text-sm" rows="5" placeholder="Write feedback here..."></textarea>
+        <input id="gradeInput" type="text" class="w-full p-3 rounded bg-gray-800 text-white text-sm" placeholder="Enter grade (e.g. A, B+, 85/100)" />
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mt-4 flex flex-col md:flex-row justify-end gap-2 md:space-x-3 shrink-0">
+      <button onclick="saveFeedback(currentSubmissionId)" class="w-full md:w-auto bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-medium transition"><i class="ri-save-3-line mr-1"></i> Save</button>
+      <button onclick="rejectSubmission(currentSubmissionId)" class="w-full md:w-auto bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg font-medium transition"><i class="ri-close-circle-line mr-1"></i> Reject</button>
+      <button onclick="approveSubmission(currentSubmissionId)" class="w-full md:w-auto bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg font-medium transition"><i class="ri-check-line mr-1"></i> Approve</button>
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>
+<script>
+  document.addEventListener("DOMContentLoaded", async function () {
+    try {
+      const response = await fetch("{% url 'get_user_profile' %}"); // Django API endpoint
+      const data = await response.json();
+  
+      if (response.ok) {
+        // Update name
+        document.getElementById("userName").textContent =
+          data.first_name && data.last_name
+            ? `Welcome, ${data.first_name} ${data.last_name}`
+            : data.username;
+  
+        // Update profile images (desktop + mobile)
+        const profileImageDesktop = document.getElementById("profileImage");
+        const profileImageMobile = document.getElementById("profileImageMobile");
+  
+        if (data.profile_picture) {
+          profileImageDesktop.src = data.profile_picture;
+          if (profileImageMobile) profileImageMobile.src = data.profile_picture;
+        } else {
+          profileImageDesktop.src = "/static/default-profile.png";
+          if (profileImageMobile) profileImageMobile.src = "/static/default-profile.png";
+        }
+      } else {
+        console.error("Error fetching user profile:", data.error);
+      }
+    } catch (error) {
+      console.error("Error loading profile:", error);
+    }
+  });
+  
+  document.addEventListener("DOMContentLoaded", () => {
+    // Desktop dropdown
+    const desktopButton = document.getElementById("userMenuButton");
+    const desktopDropdown = document.getElementById("userDropdown");
+  
+    if (desktopButton && desktopDropdown) {
+      desktopButton.addEventListener("click", (e) => {
+        desktopDropdown.classList.toggle("hidden");
+        e.stopPropagation();
+      });
+    }
+  
+    // Close dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      if (
+        desktopDropdown &&
+        !desktopDropdown.contains(e.target) &&
+        desktopButton &&
+        !desktopButton.contains(e.target)
+      ) {
+        desktopDropdown.classList.add("hidden");
+      }
+    });
+  });
+  </script>
+  
+
+<script>
+  async function approveSubmission(submissionId) {
+    if (!confirm("Are you sure you want to approve this submission?")) return;
+  
+    try {
+      const res = await fetch(`/approve-submission/${submissionId}/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCookie("csrftoken"),
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        credentials: "same-origin"
+      });
+  
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Server error: ${res.status} - ${errText}`);
+      }
+  
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
+  
+      if (data && data.status && data.status.toLowerCase() === "ok") {
+        // ✅ Update status badge
+        const statusCell = document.getElementById(`status-${submissionId}`);
+        if (statusCell) {
+          statusCell.innerHTML =
+            `<span class="px-2 py-1 rounded-full bg-green-500 text-white text-xs font-semibold">Approved</span>`;
+        }
+        alert("Submission approved successfully.");
+      } else {
+        // ⚠️ Treat unknown response as success fallback
+        console.warn("Unexpected response:", data);
+        alert("Submission approved (response format was unexpected).");
+      }
+    } catch (err) {
+      console.error("Approve error:", err);
+      alert("Error approving submission.");
+    }
+  }
+  
+  async function rejectSubmission(submissionId) {
+    if (!confirm("Are you sure you want to reject this submission?")) return;
+
+    try {
+      const res = await fetch(`/reject-submission/${submissionId}/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCookie("csrftoken"),
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        credentials: "same-origin"  // ✅ ensures cookies (incl. csrf) are sent
+      });
+
+      if (!res.ok) {
+        const errText = await res.text(); // may contain CSRF error page
+        throw new Error(`Server error: ${res.status} - ${errText}`);
+      }
+
+      const data = await res.json().catch(() => ({})); // fallback if response not JSON
+      if (data.status === "ok") {
+        document.getElementById(`status-${submissionId}`).innerText = "Rejected";
+        alert("Submission rejected successfully.");
+      } else {
+        alert("Failed to reject submission.");
+      }
+    } catch (err) {
+      console.error("Reject error:", err);
+      alert("Error rejecting submission.");
+    }
+  }
+
+  // Helper to get CSRF token from cookie
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.startsWith(name + "=")) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+</script>
+
+  
+<script>
+  let currentSubmissionId = null;
+  
+  function openAnalysisModal(submissionId){
+    currentSubmissionId = submissionId;
+    document.getElementById("analysisModal").classList.remove("hidden");
+    loadAnalysisData(submissionId);
+    showTab('summary');
+  }
+  
+  function closeAnalysisModal(){
+    document.getElementById("analysisModal").classList.add("hidden");
+  }
+  
+  function showTab(tab, btn=null){
+    document.querySelectorAll(".tab-content").forEach(el=>el.classList.add("hidden"));
+    document.getElementById("tab-"+tab).classList.remove("hidden");
+    document.querySelectorAll(".tab-btn").forEach(el=>el.classList.remove("active"));
+    if(btn) btn.classList.add("active");
+  }
+  
+  // Format text for better UI
+  function formatTextUI(text){
+    if(!text) return "<p class='text-gray-400 italic'>No data available.</p>";
+  
+    // Remove symbols like #, *, -
+    let cleanText = text.replace(/[#*]/g, '').trim();
+  
+    // Split into paragraphs
+    let paragraphs = cleanText.split(/\n+/).map(p => p.trim()).filter(p=>p.length>0);
+  
+    // Wrap paragraphs in styled <p>
+    return paragraphs.map(p => {
+      // Highlight lines starting with "Grade" or "Feedback"
+      if(/^grade:/i.test(p)) return `<p class="text-green-400 font-semibold mb-2">${p}</p>`;
+      if(/^feedback:/i.test(p)) return `<p class="text-blue-400 mb-2">${p}</p>`;
+      // Regular text
+      return `<p class="text-gray-200 mb-2">${p}</p>`;
+    }).join("");
+  }
+  
+  async function loadAnalysisData(submissionId){
+    try{
+      const res = await fetch(`/analyze-work/${submissionId}/`, {method:"POST"});
+      const data = await res.json();
+  
+      // Presentable summary
+      document.getElementById("tab-summary").innerHTML = formatTextUI(data.summary);
+  
+      // Pre-fill feedback and grade inputs
+      document.getElementById("feedbackText").value = data.feedback || "";
+      document.getElementById("gradeInput").value = data.grade || "";
+    }catch(e){
+      document.getElementById("tab-summary").innerHTML = "<p class='text-red-400'>Error loading data</p>";
+      document.getElementById("tab-feedback").innerHTML = "<p class='text-red-400'>Error loading data</p>";
+    }
+  }
+  
+  async function saveFeedback(submissionId){
+    try{
+      const feedback = document.getElementById("feedbackText").value;
+      const grade = document.getElementById("gradeInput").value;
+  
+      const res = await fetch(`/save-feedback/${submissionId}/`, {
+        method: "POST",
+        headers: {"Content-Type":"application/json", "X-CSRFToken": getCSRFToken()},
+        body: JSON.stringify({feedback, grade})
+      });
+  
+      if(!res.ok) throw new Error("Failed to save");
+  
+      const data = await res.json();
+      const gradeCell = document.getElementById("feedback-"+submissionId);
+      if(gradeCell) gradeCell.innerText = data.grade || "";
+  
+      alert("Feedback saved! (Grade visible in table, feedback saved silently)");
+    }catch(e){
+      alert("Error saving feedback.");
+    }
+  }
+  
+  function getCSRFToken(){
+    return document.cookie.split(';').find(c=>c.trim().startsWith('csrftoken='))?.split('=')[1];
+  }
+  </script>
+  
+
+</body>
+</html>

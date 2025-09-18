@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sahayak.AI - AI Teacher Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#6366f1',
+secondary: '#a855f7'
+},
+borderRadius: {
+'none': '0px',
+'sm': '4px',
+DEFAULT: '8px',
+'md': '12px',
+'lg': '16px',
+'xl': '20px',
+'2xl': '24px',
+'3xl': '32px',
+'full': '9999px',
+'button': '8px'
+}
+}
+}
+}
+</script>
+<style>
+    @keyframes fade-in {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      
+      .animate-fade-in {
+        animation: fade-in 0.3s ease-out forwards;
+      }
+      
+    html, body {
+        height: 100%;
+        overflow-y: auto; /* enable vertical scroll on page */
+        background:
+        radial-gradient(ellipse 140% 60% at 50% 115%, #001a33 0%, transparent 70%),
+        linear-gradient(to top, #020617 0%,  #001a33 100%);
+      background-repeat: no-repeat;
+        margin: 0;
+        padding: 0;
+      }
+      body::-webkit-scrollbar {
+        width: 8px;
+      }
+      body::-webkit-scrollbar-track {
+        background: #1e293b; /* slate-800 */
+      }
+      body::-webkit-scrollbar-thumb {
+        background-color: #4b5563; /* gray-600 */
+        border-radius: 10px;
+        border: 2px solid #1e293b;
+      }
+      
+      /* Firefox */
+      body {
+        scrollbar-width: thin;
+        scrollbar-color: #4b5563 #1e293b;
+      }      
+:where([class^="ri-"])::before { content: "\f3c2"; }
+.modal {
+opacity: 0;
+visibility: hidden;
+transition: all 0.3s ease;
+}
+.modal.active {
+opacity: 1;
+visibility: visible;
+}
+.active {
+    background-color: #1E90FF !important;
+    color: white !important;
+}
+</style>
+</head>
+<body class="bg-gray-900 text-gray-100 h-screen flex overflow-hidden">
+
+    <!-- Mobile Toggle Button -->
+    
+  
+    <!-- Sidebar: fixed left -->
+<!-- Bottom bar for mobile -->
+<aside id="sidebar"
+       class="hidden md:block md:fixed md:top-0 md:left-0 md:w-64 md:h-screen
+              p-6 md:overflow-y-auto shadow-lg z-[50]"
+       style="
+         background:#020617;
+         border-right: 0.5px solid #fff;
+       ">
+       <div class="mb-14  flex items-center -gap-1 justify-start mt-2 -ml-4">
+        <!-- Image on left -->
+        <div class="w-16 h-16 overflow-hidden rounded-full">
+          <img src="/static/images/logo (3).png" alt="Sahayak.AI"
+               class="w-full h-full object-cover cursor-pointer"/>
+        </div>
+        
+        
+        <!-- Text on right -->
+        <div class="flex flex-col">
+          <h1 class="text-2xl font-sans text-white tracking-wide ">Sahayak.AI</h1>
+          <p class="text-sm text-gray-400 mt-1">Empowering Classrooms</p>
+        </div>
+      </div>
+      
+      
+
+  <nav class="space-y-8 text-sm">
+    <div>
+      <p class="text-gray-500 uppercase font-semibold text-xs tracking-wider mb-3">Main</p>
+      <a href="/home/" id="homeBtn" class="flex items-center gap-3 px-2.5 py-1.5 rounded-md text-white hover:bg-gray-800 transition w-full group">
+        <i class="ri-book-line text-lg group-hover:text-white"></i>
+        <span>Home</span>
+      </a>
+    </div>
+
+    <div>
+      <p class="text-gray-500 uppercase font-semibold text-xs tracking-wider mb-3">Classes</p>
+      <div class="space-y-2">
+        <button id="toggleMyClasses" class="flex items-center gap-3 px-2.5 py-1.5 rounded-md text-white hover:bg-gray-800 transition w-full group">
+          <i class="ri-book-line text-lg group-hover:text-white"></i>
+          <span>My Classes</span>
+        </button>
+        <button id="toggleJoinedClasses" class="flex items-center gap-3 px-2.5 py-1.5 rounded-md text-white hover:bg-gray-800 transition w-full group">
+          <i class="ri-group-line text-lg group-hover:text-white"></i>
+          <span>Joined Classes</span>
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <p class="text-gray-500 uppercase font-semibold text-xs tracking-wider mb-3">Tools</p>
+      <div class="space-y-2">
+        <a href="{% url 'progress_page' %}" class="flex items-center gap-3 px-2.5 py-1.5 rounded-md text-white hover:bg-gray-800 transition group">
+          <i class="ri-line-chart-line text-lg group-hover:text-white"></i>
+          <span>Progress</span>
+        </a>
+        <a href="{% url 'chatbot' %}" class="flex items-center gap-3 px-2.5 py-1.5 rounded-md text-white hover:bg-gray-800 transition group">
+          <i class="ri-robot-line text-lg group-hover:text-white"></i>
+          <span>Ask Syncrona</span>
+        </a>
+      </div>
+    </div>
+
+    <div>
+      <p class="text-gray-500 uppercase font-semibold text-xs tracking-wider mb-3">Settings</p>
+      <a href="/settings/" class="flex items-center gap-3 px-2.5 py-1.5 rounded-md text-white hover:bg-gray-800 transition group">
+        <i class="ri-settings-line text-lg group-hover:text-white"></i>
+        <span>Settings</span>
+      </a>
+    </div>
+  </nav>
+</aside>
+
+
+<!-- Bottom nav (mobile) -->
+<!-- Bottom nav (mobile) -->
+<!-- Bottom nav (mobile) -->
+<!-- Bottom nav (mobile) -->
+<nav class="fixed bottom-0 left-0 right-0 z-[50] bg-[#020617]/80 backdrop-blur-md flex justify-between items-center h-14 px-16 md:hidden" style="border-top: 0.5px solid #fff;">
+
+  <!-- Home Button -->
+  <a href="/home/" class="flex items-center justify-center w-12 h-12 transition-all">
+    <img src="/static/images/image.png" 
+         alt="Home" 
+         class="w-6 h-6 filter invert">
+  </a>
+  
+  
+  
+
+  <!-- Progress Button -->
+  
+
+  <!-- Chatbot Button -->
+  <a href="{% url 'chatbot' %}" 
+   class="flex items-center justify-center w-16 h-16 mb-5 rounded-full bg-blue-600 border border-white transition-all">
+  <img src="/static/images/bot.png" alt="Syncrona" class="w-6 h-6 filter brightness-0 invert">
+</a>
+
+
+<a href="{% url 'progress_page' %}" class="flex items-center justify-center w-12 h-12 transition-all">
+  <img src="/static/images/performance.png" alt="Progress" class="w-6 h-6 filter  invert ">
+</a>
+  <!-- My Classes Button -->
+  
+
+  <!-- Joined Classes Button -->
+  
+
+</nav>
+
+
+
+
+
+    <!-- Main wrapper (z-[20]) -->
+    <div class="flex flex-col flex-1 h-screen overflow-y-auto md:ml-64">
+      <!-- Header / Navbar (z-[50]) -->
+      <header class="fixed top-0 left-0 right-0 h-14 flex items-center justify-between px-4 md:px-8 shadow-lg z-[40] bg-[#020617] border-b border-white/50"
+          ">
+    <!-- Left: Logo -->
+    <div class="flex items-center gap-2 -ml-2 md:ml-0">
+      <img src="/static/images/logo (3).png" alt="Sahayak.AI" class="w-10 h-10" />
+      <span class="sr-only">Sahayak.AI</span>
+    </div>
+
+    <!-- Right: Actions -->
+    <div class="flex items-center gap-2 md:gap-4">
+      <!-- Notifications -->
+      <button aria-label="Notifications"
+        class="relative p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+        <i class="ri-notification-3-line text-2xl"></i>
+        <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-gray-900 animate-pulse"></span>
+      </button>
+
+      <!-- Desktop profile -->
+      <div class="hidden md:flex items-center space-x-2  space-y-reverse relative h-10" id="desktopUserMenu">
+        <img id="profileImage" src="/static/default-profile.png" alt="User Profile"
+           class="w-10 h-10 rounded-full object-cover border border-gray-600 cursor-pointer"/>
+      <button id="userMenuButton"
+              class="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-gray-700 transition focus:outline-none h-full">
+        <span id="userName" class="text-white font-medium">Loading...</span>
+        <i class="ri-arrow-down-s-line text-lg text-gray-400 group-hover:text-white"></i>
+      </button>
+    
+          <!-- Dropdown -->
+          <div id="userDropdown"
+         class="hidden absolute right-0 top-full mt-2 w-48 bg-gray-900 rounded-lg shadow-2xl py-2 
+                border border-gray-700 text-sm z-[70]">
+    
+            <a href="{% url 'profile' %}" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">Profile</a>
+            <a href="{% url 'settings' %}" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">Settings</a>
+            <form method="POST" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button type="submit" 
+                      class="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">
+                Sign out
+              </button>
+            </form>
+          </div>
+        </div>
+    
+        <!-- Mobile profile -->
+        <!-- Mobile User Menu -->
+    <!-- Mobile User Menu -->
+    <div class="md:hidden flex items-center relative" id="mobileUserMenu">
+      
+      <button id="mobileUserMenuButton" class="flex items-center -translate-y-1">
+        <img id="profileImageMobile" src="/static/default-profile.png" alt="User Profile"
+             class="w-9 h-9 rounded-full object-cover border border-gray-600 cursor-pointer"/>
+      </button>
+      
+    
+      <!-- Dropdown -->
+      <div id="mobileUserDropdown"
+           class="hidden absolute right-0 top-full mt-2 w-40 bg-gray-900 rounded-lg shadow-2xl py-2 border border-gray-700 text-sm z-[70]">
+        <a href="{% url 'profile' %}" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">Profile</a>
+        <a href="{% url 'settings' %}" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">Settings</a>
+        <form method="POST" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">
+            Sign out
+          </button>
+        </form>
+      </div>
+    </div>
+    </div>
+  </header>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // Desktop dropdown
+    const desktopButton = document.getElementById("userMenuButton");
+    const desktopDropdown = document.getElementById("userDropdown");
+    if (desktopButton && desktopDropdown) {
+      desktopButton.addEventListener("click", (e) => {
+        desktopDropdown.classList.toggle("hidden");
+        e.stopPropagation();
+      });
+    }
+  
+    // Mobile dropdown
+    const mobileButton = document.getElementById("mobileUserMenuButton");
+    const mobileImage = document.getElementById("mobileProfileImage");
+    const mobileDropdown = document.getElementById("mobileUserDropdown");
+  
+    if (mobileButton && mobileDropdown) {
+      mobileButton.addEventListener("click", (e) => {
+        mobileDropdown.classList.toggle("hidden");
+        e.stopPropagation();
+      });
+    }
+  
+    if (mobileImage && mobileDropdown) {
+      mobileImage.addEventListener("click", (e) => {
+        mobileDropdown.classList.toggle("hidden");
+        e.stopPropagation();
+      });
+    }
+  
+    // Close dropdowns when clicking outside
+    document.addEventListener("click", (e) => {
+      if (desktopDropdown && !desktopDropdown.contains(e.target) && desktopButton && !desktopButton.contains(e.target)) {
+        desktopDropdown.classList.add("hidden");
+      }
+      if (mobileDropdown && !mobileDropdown.contains(e.target) && mobileButton && !mobileButton.contains(e.target) && !mobileImage.contains(e.target)) {
+        mobileDropdown.classList.add("hidden");
+      }
+    });
+  });
+</script>
+
+
+      
+      <!-- Mobile Header (below md) -->
+      
+  
+      <!-- Content area below header, padding top for header height -->
+      <main class="mt-16 px-4 md:px-8 py-6 space-y-10">
+
+        <!-- My Classes Section -->
+        <section id="myClassesSection"
+         class="rounded-2xl shadow-lg p-6 md:p-8 relative overflow-hidden"
+         style="border: 0.5px solid #fff; 
+                background:#020617;">
+
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl md:text-3xl font-semibold text-white tracking-tight">My Classes</h2>
+            <span id="classCount"
+                  class="text-xs md:text-sm text-white px-3 py-1.5 rounded-full shadow-sm" style="background:#020617; border: 0.5px solid #fff;">
+              <!-- Class count will go here -->
+            </span>
+          </div>
+          <div id="classContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <p id="loadingText" class="text-gray-400 italic text-sm md:text-base col-span-2">Loading classrooms...</p>
+            <!-- Dynamically inserted class cards -->
+          </div>
+        </section>
+      
+        <!-- Joined Classes Section -->
+        <section id="joinedClassesSection"
+         class="rounded-2xl shadow-lg p-6 md:p-8 mb-6"
+         style="background:#020617 ; 
+                border: 0.5px solid #fff;">
+
+
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl md:text-3xl font-semibold text-white tracking-tight">Joined Classes</h2>
+          </div>
+          <p id="noClassesMsg" class="text-gray-500 italic text-center py-10 md:py-12 text-sm hidden col-span-2">
+            You haven't joined any classes yet.
+          </p>
+          <div id="joinedClasses" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <!-- Dynamically inserted joined class cards -->
+          </div>
+        </section>
+      
+      </main>
+      
+
+      
+    </div>
+  
+    <!-- Floating Action Button + Options: fixed bottom right -->
+    <div class="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-60 flex flex-col items-end gap-3">
+      <div id="fabOptions" class="hidden flex flex-col items-end gap-3 transition-all duration-300 ease-in-out">
+        <button id="joinClassBtn" class="flex items-center gap-2 px-4 py-2 bg-[#020617] border border-[#023e8a] text-white rounded-full shadow-lg transition-all duration-200 group">
+          <i class="ri-user-add-line text-lg group-hover:rotate-12"></i>
+          <span class="text-sm font-medium">Join Class</span>
+        </button>
+        <button id="createClassBtn" class="flex items-center gap-2 px-4 py-2 bg-[#020617] border border-[#023e8a] text-white rounded-full shadow-lg transition-all duration-200 group">
+          <i class="ri-add-line text-lg group-hover:rotate-12"></i>
+          <span class="text-sm font-medium">Create Class</span>
+        </button>
+      </div>
+      <button id="fabButton" class="w-14 h-14 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-2xl flex items-center justify-center transform transition-all duration-300 hover:rotate-45 hover:scale-105" aria-label="Toggle menu">
+        <i class="ri-add-line text-2xl"></i>
+      </button>
+    </div>
+
+  
+<div id="joinClassModal" class="fixed inset-0 z-[55] hidden flex items-center justify-center px-4 min-h-screen">
+  <!-- Overlay -->
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+
+  <!-- Modal Content -->
+  <div class="relative z-10 w-full max-w-xs sm:max-w-sm md:max-w-lg 
+            bg-[#020617] border border-white
+            rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 
+            animate-[fade-in-up_0.3s_ease-out]
+            overflow-y-auto max-h-[90vh] border border-gray-700/70">
+
+    
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-4 border-b border-gray-700/50 pb-3">
+      <h3 class="text-lg md:text-xl font-semibold text-white">Join a Class</h3>
+      <button class="closeJoinModal text-gray-400 hover:text-white transition hover:rotate-90">
+        <i class="ri-close-line text-2xl"></i>
+      </button>
+    </div>
+
+    <!-- Form -->
+    <form id="joinClassForm" class="space-y-5">
+      <div>
+        <label for="classCode" class="block text-sm font-medium text-gray-300 mb-1">Class Code</label>
+        <input type="text" id="classCode"
+          class="w-full px-4 py-2 rounded-lg bg-gray-800/80 text-white placeholder-gray-500
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+                 shadow-inner transition"
+          placeholder="Enter class code" required>
+      </div>
+      <div class="flex justify-end space-x-3 pt-2">
+        <button type="button"
+          class="closeJoinModal px-3 py-1.5 text-gray-300 hover:text-white border border-gray-600 
+                 rounded-lg transition hover:scale-105">
+          Cancel
+        </button>
+        <button type="submit"
+          class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 
+                 hover:from-blue-500 hover:to-indigo-500 text-white 
+                 rounded-lg transition hover:scale-105 shadow-md">
+          Join Class
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Create Class Modal -->
+<div id="createClassModal" class="fixed inset-0 z-[55] hidden flex items-center justify-center px-4 min-h-screen">
+  <!-- Overlay -->
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+
+  <!-- Modal Content -->
+  <div class="relative z-10 w-full max-w-xs sm:max-w-sm md:max-w-lg 
+  bg-[#020617] border border-white
+              rounded-2xl shadow-2xl p-6 md:p-8 
+              animate-[fade-in-up_0.3s_ease-out]
+              overflow-y-auto max-h-[90vh] border border-gray-700/70">
+    
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-4 border-b border-gray-700/50 pb-3">
+      <h3 class="text-lg md:text-xl font-semibold text-white">Create New Class</h3>
+      <button class="closeModal text-gray-400 hover:text-white transition hover:rotate-90">
+        <i class="ri-close-line text-2xl"></i>
+      </button>
+    </div>
+
+    <!-- Form -->
+    <form id="createClassForm" class="space-y-5">
+      <div>
+        <label for="className" class="block text-sm font-medium text-gray-300 mb-1">Class Name</label>
+        <input type="text" id="className"
+          class="w-full px-4 py-2 rounded-lg bg-gray-800/80 text-white placeholder-gray-500
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+                 shadow-inner transition"
+          placeholder="Enter class name" required>
+      </div>
+      <div>
+        <label for="classSubject" class="block text-sm font-medium text-gray-300 mb-1">Subject</label>
+        <input type="text" id="classSubject"
+          class="w-full px-4 py-2 rounded-lg bg-gray-800/80 text-white placeholder-gray-500
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+                 shadow-inner transition"
+          placeholder="Enter subject" required>
+      </div>
+      <div class="flex justify-end space-x-3 pt-2">
+        <button type="button"
+          class="closeModal px-4 py-2 text-gray-300 hover:text-white border border-gray-600 
+                 rounded-lg transition hover:scale-105">
+          Cancel
+        </button>
+        <button type="submit"
+          class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 
+                 hover:from-blue-500 hover:to-indigo-500 text-white 
+                 rounded-lg transition hover:scale-105 shadow-md">
+          Create Class
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+  
+  
+  
+  
+  
+    <script>
+      // Sidebar mobile toggle
+      const sidebar = document.getElementById('sidebar');
+      const mobileToggleBtn = document.getElementById('mobileMenuToggle');
+      mobileToggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('-translate-x-full');
+      });
+  
+      // User dropdown toggle
+      document.addEventListener('DOMContentLoaded', () => {
+        const menuButton = document.getElementById('userMenuButton');
+        const dropdown = document.getElementById('userDropdown');
+    
+        // Toggle dropdown
+        menuButton.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dropdown.classList.toggle('hidden');
+        });
+    
+        // Close dropdown if clicked outside
+        document.addEventListener('click', (e) => {
+          if (!document.getElementById('userMenu').contains(e.target)) {
+            dropdown.classList.add('hidden');
+          }
+        });
+    
+        // Optional: close on escape key
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            dropdown.classList.add('hidden');
+          }
+        });
+      });
+  
+      // Floating Action Button toggle
+      const fabButton = document.getElementById('fabButton');
+      const fabOptions = document.getElementById('fabOptions');
+      fabButton.addEventListener('click', () => {
+        fabOptions.classList.toggle('hidden');
+      });
+  
+      // Modal elements
+      const joinClassModal = document.getElementById('joinClassModal');
+      const createClassModal = document.getElementById('createClassModal');
+  
+      // Open modals on button click
+      document.getElementById('joinClassBtn').addEventListener('click', () => {
+        joinClassModal.classList.remove('hidden');
+        fabOptions.classList.add('hidden');
+        document.body.style.overflow = 'hidden';
+      });
+      document.getElementById('createClassBtn').addEventListener('click', () => {
+        createClassModal.classList.remove('hidden');
+        fabOptions.classList.add('hidden');
+        document.body.style.overflow = 'hidden';
+      });
+  
+      // Close modals on clicking close buttons
+      document.querySelector('.closeJoinModal').addEventListener('click', () => {
+        joinClassModal.classList.add('hidden');
+        document.body.style.overflow = '';
+      });
+      document.querySelector('.closeCreateModal').addEventListener('click', () => {
+        createClassModal.classList.add('hidden');
+        document.body.style.overflow = '';
+      });
+  
+      // Optional: close modals on background click
+      joinClassModal.addEventListener('click', (e) => {
+        if (e.target === joinClassModal) {
+          joinClassModal.classList.add('hidden');
+          document.body.style.overflow = '';
+        }
+      });
+      createClassModal.addEventListener('click', (e) => {
+        if (e.target === createClassModal) {
+          createClassModal.classList.add('hidden');
+          document.body.style.overflow = '';
+        }
+      });
+    </script>
+  
+  </body>
+  
+
+
+
+
+
+<script>
+    
+  document.addEventListener("DOMContentLoaded", function () {
+    let myClasses = document.getElementById('myClassesSection');
+    let joinedClasses = document.getElementById('joinedClassesSection');
+    let toggleMyClasses = document.getElementById('toggleMyClasses');
+    let toggleJoinedClasses = document.getElementById('toggleJoinedClasses');
+    let toggleMyClassesMobile = document.getElementById('toggleMyClassesMobile');
+    let toggleJoinedClassesMobile = document.getElementById('toggleJoinedClassesMobile');
+
+    function toggleSection(section) {
+        if (section === 'myClasses') {
+            myClasses.style.display = "block";
+            joinedClasses.style.display = "none";
+        } else {
+            joinedClasses.style.display = "block";
+            myClasses.style.display = "none";
+        }
+    }
+
+    // Initial state: Show both sections
+    myClasses.style.display = "block";
+    joinedClasses.style.display = "block";
+
+    toggleMyClasses.addEventListener("click", function () {
+        toggleSection("myClasses");
+    });
+
+    toggleJoinedClasses.addEventListener("click", function () {
+        toggleSection("joinedClasses");
+    });
+
+    toggleMyClassesMobile.addEventListener("click", function () {
+        toggleSection("myClasses");
+    });
+
+    toggleJoinedClassesMobile.addEventListener("click", function () {
+        toggleSection("joinedClasses");
+    });
+});
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const userMenu = document.getElementById('userMenu');
+        const userDropdown = document.getElementById('userDropdown');
+        const fabButton = document.getElementById('fabButton');
+        const fabOptions = document.getElementById('fabOptions');
+        
+        const createClassModal = document.getElementById('createClassModal');
+        const createClassBtn = document.getElementById('createClassBtn');
+        const closeModalButtons = document.querySelectorAll('.closeModal');
+        const createClassForm = document.getElementById('createClassForm');
+        
+        // Toggle user dropdown menu
+        userMenu.addEventListener('click', function() {
+            userDropdown.classList.toggle('hidden');
+        });
+    
+        document.addEventListener('click', function(event) {
+            if (!userMenu.contains(event.target)) {
+                userDropdown.classList.add('hidden');
+            }
+        });
+    
+        // Show Create Class Modal
+        createClassBtn.addEventListener('click', function() {
+            createClassModal.classList.remove('hidden');  // Ensure it's visible
+        });
+    
+        // Close Create Class Modal
+        closeModalButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                createClassModal.classList.add('hidden');  // Hide the modal properly
+            });
+        });
+    
+        // Handle Form Submission
+        createClassForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            createClassModal.classList.add('hidden');  // Hide modal after submission
+            
+            // Show success notification
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg';
+            notification.textContent = 'Class created successfully!';
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.remove(), 3000);
+        });
+    
+        // Join Class Button (Temporary)
+        const joinClassBtn = document.getElementById('joinClassBtn');
+        joinClassBtn.addEventListener('click', function() {
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-4 right-4 bg-secondary text-white px-6 py-3 rounded-lg shadow-lg';
+            notification.textContent = 'Join class feature coming soon!';
+            
+            setTimeout(() => notification.remove(), 3000);
+        });
+    
+        // Floating Action Button (FAB) Toggle
+        fabButton.addEventListener("click", function () {
+            fabOptions.classList.toggle("hidden");
+        });
+    
+        // Hide FAB options when clicking outside
+        document.addEventListener("click", function (event) {
+            if (!fabButton.contains(event.target) && !fabOptions.contains(event.target)) {
+                fabOptions.classList.add("hidden");
+            }
+        });
+    });
+    
+    async function loadClassrooms() {
+      try {
+          const response = await fetch("/get-user-classes/");
+          const data = await response.json();
+          console.log(data);
+  
+          const classContainer = document.getElementById("classContainer");
+          const classCount = document.getElementById("classCount");
+          classContainer.innerHTML = "";
+  
+          if (data.classes.length === 0) {
+              classContainer.innerHTML = "<p class='text-gray-400'>No classrooms created yet.</p>";
+              classCount.textContent = "No classes";
+              return;
+          }
+  
+          classCount.textContent = `${data.classes.length} classes`;
+  
+          data.classes.forEach(classroom => {
+              const classCard = document.createElement("div");
+              // Set background image via style
+              classCard.className = "rounded-xl p-5 border border-[#a6e1fa] relative overflow-hidden";
+              classCard.style.backgroundImage = "url('/static/images/download (4).jpeg')";
+              classCard.style.backgroundSize = "cover";
+              classCard.style.backgroundPosition = "center";
+  
+              // Optional overlay for better readability
+              classCard.innerHTML = `
+                <div class="absolute inset-0 bg-[#020617]/40 rounded-xl"></div>
+                <div class="relative z-30">
+                  <!-- Header: Title + Subject + Delete -->
+                  <div class="flex justify-between items-center mb-4 ml-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                      <h3 class="text-xl sm:text-2xl font-bold text-white tracking-wide leading-tight">
+                        ${classroom.name}
+                      </h3>
+                      <span class="text-sm sm:text-base text-gray-300 font-medium italic">
+                        (${classroom.subject})
+                      </span>
+                    </div>
+                    <button
+                      onclick="deleteClassroom('${classroom.unique_code}')"
+                      class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full 
+                             bg-red-600 hover:bg-red-700 text-white transition transform hover:scale-110 shadow-md"
+                      aria-label="Delete Classroom"
+                    >
+                      <i class="ri-delete-bin-line text-lg sm:text-xl"></i>
+                    </button>
+                  </div>
+  
+                  <p class="flex items-center text-xs sm:text-sm text-gray-400 mb-4">
+                    <i class="ri-user-line text-gray-500 mr-1.5 sm:mr-2 text-sm sm:text-base"></i>
+                    Created by <span class="text-white font-medium ml-1">${data.teacher_name}</span>
+                  </p>
+  
+                  <div class="flex justify-between items-center mb-4 text-xs sm:text-sm">
+                    <span
+                      id="student-count-${classroom.unique_code}"
+                      class="inline-block bg-[#020617] text-gray-200 px-3 py-1 
+                             rounded-full font-medium tracking-wide border border-[#023e8a]">
+                      Loading students...
+                    </span>
+                    <span class="font-mono text-white bg-[#020617] px-2 py-0.5 rounded-md border border-[#023e8a]">
+                      ${classroom.unique_code}
+                    </span>
+                  </div>
+  
+                  <div class="flex justify-center z-10">
+                    <a
+    href="/view-classroom/${classroom.unique_code}/"
+    class="block mt-6 bg-[#094cdc] hover:bg-[#1a5eff] text-white py-2.5 rounded-md 
+           font-semibold shadow-md transition transform hover:scale-[1.05] text-center text-sm sm:text-base"
+    style="width: 90%; z-index: 15; position: relative;"
+  >
+    View Class
+  </a>
+                  </div>
+                </div>
+              `;
+              classContainer.appendChild(classCard);
+              loadStudentCount(classroom.unique_code);
+          });
+      } catch (error) {
+          console.error("Error fetching classrooms:", error);
+          document.getElementById("classContainer").innerHTML = "<p class='text-red-500'>Failed to load classrooms.</p>";
+      }
+  }
+  
+
+
+async function loadStudentCount(classCode) {
+    try {
+        const response = await fetch(`/api/get_class_students/${classCode}/`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch students: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log(`Students in ${classCode}:`, data);  // Debugging log
+
+        const studentCountElement = document.getElementById(`student-count-${classCode}`);
+        if (!studentCountElement) {
+            console.error(`Student count element for class ${classCode} not found.`);
+            return;
+        }
+
+        studentCountElement.textContent = `Students: ${data.students.length}`;
+    } catch (error) {
+        console.error(`Error fetching student count for class ${classCode}:`, error);
+        const studentCountElement = document.getElementById(`student-count-${classCode}`);
+        if (studentCountElement) {
+            studentCountElement.textContent = "Students: Error loading";
+        }
+    }
+}
+
+function getCSRFToken() {
+    return document.getElementById("csrf_token").value;
+}
+
+function deleteClassroom(classCode) {
+    console.log("🟢 Deleting Classroom:", classCode); // Debugging
+
+    if (!classCode) {
+        alert("❌ Error: Unique code not received.");
+        return;
+    }
+
+    if (confirm("🗑️ Are you sure you want to delete this classroom?")) {
+        fetch("/delete-classroom/", {
+            method: "DELETE",
+            headers: {
+                "X-CSRFToken": getCSRFToken(),
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ unique_code: classCode }) // ✅ Sending unique_code in body
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("🔵 Server Response:", data); // Debugging
+
+            if (data.message) {
+                alert("✅ " + data.message);
+                location.reload();
+            } else {
+                alert("❌ Error: " + data.error);
+            }
+        })
+        .catch(error => {
+            console.error("❌ Fetch Error:", error);
+            alert("An error occurred.");
+        });
+    }
+}
+
+
+// Function to get CSRF token from cookies
+function getCSRFToken() {
+    let cookieValue = null;
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.startsWith("csrftoken=")) {
+            cookieValue = cookie.substring("csrftoken=".length, cookie.length);
+            break;
+        }
+    }
+    return cookieValue;
+}
+document.addEventListener("DOMContentLoaded", loadClassrooms);
+
+async function loadStudentProfiles(classCode) {
+    try {
+        const response = await fetch(`/api/get_class_students/${classCode}/`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch students: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const studentContainer = document.getElementById(`students-${classCode}`);
+
+        if (!studentContainer) {
+            console.error(`Container for class ${classCode} not found.`);
+            return;
+        }
+
+        studentContainer.innerHTML = ""; // Clear previous content
+
+        if (!data.students || data.students.length === 0) {
+            studentContainer.innerHTML = "<p class='text-gray-400 text-xs'>No students yet.</p>";
+            return;
+        }
+
+        // Append student profile pictures
+        data.students.slice(0, 5).forEach(student => {
+            const img = document.createElement("img");
+            img.src = student.profile_picture?.trim() || "/static/default-pfp.png"; // Use default if missing
+            img.alt = student.name;
+            img.className = "w-8 h-8 rounded-full border-2 border-gray-800";
+            studentContainer.appendChild(img);
+        });
+
+        // Show "+X more" if more than 5 students
+        if (data.students.length > 5) {
+            const moreCount = document.createElement("div");
+            moreCount.className = "w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-800 flex items-center justify-center text-xs text-white";
+            moreCount.textContent = `+${data.students.length - 5}`;
+            studentContainer.appendChild(moreCount);
+        }
+
+    } catch (error) {
+        console.error(`Error fetching students for class ${classCode}:`, error);
+        const studentContainer = document.getElementById(`students-${classCode}`);
+        if (studentContainer) {
+            studentContainer.innerHTML = "<p class='text-red-500 text-xs'>Failed to load students.</p>";
+        }
+    }
+}
+function fetchJoinedClasses() {
+  console.log("Fetching joined classes...");
+
+  fetch("{% url 'get_joined_classes' %}") // Ensure this URL is correct
+      .then(response => response.json())
+      .then(data => {
+          console.log("DEBUG: Fetched joined classes:", data);
+
+          const joinedClassesDiv = document.getElementById("joinedClasses");
+          const classCount = document.getElementById("classCount");
+          joinedClassesDiv.innerHTML = "";
+
+          if (!data || !data.joined_classes || data.joined_classes.length === 0) {
+              document.getElementById("noClassesMsg").style.display = "block";
+              classCount.textContent = "No classes";
+              return;
+          }
+
+          document.getElementById("noClassesMsg").style.display = "none";
+          classCount.textContent = `${data.joined_classes.length} classes`;
+
+          data.joined_classes.forEach(classroom => {
+              const classItem = document.createElement("div");
+              classItem.className = "rounded-xl p-5 border border-[#a6e1fa] relative overflow-hidden";
+
+              // Background image
+              classItem.style.backgroundImage = "url('/static/images/download (6).jpeg')";
+              classItem.style.backgroundSize = "cover";
+              classItem.style.backgroundPosition = "center";
+
+              // Add overlay for readability
+              classItem.innerHTML = `
+                <div class="absolute inset-0 bg-[#001c55]/50 rounded-xl"></div>
+                <div class="relative z20">
+                  <!-- Header -->
+                  <div class="flex justify-between items-start mb-4">
+                    <div class="flex flex-col">
+                      <h3 class="text-lg sm:text-xl font-semibold text-white leading-snug">
+                        ${classroom.name}
+                      </h3>
+                      <span class="text-sm text-gray-300 font-medium italic">
+                        ${classroom.subject}
+                      </span>
+                    </div>
+                    <button
+                      class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-white rounded-full 
+                             hover:bg-gray-700/70 transition"
+                      aria-label="More options"
+                    >
+                      <i class="ri-more-2-fill text-lg"></i>
+                    </button>
+                  </div>
+
+                  <!-- Code -->
+                  <div class="flex items-center justify-between mb-4 text-xs sm:text-sm">
+                    <span class="font-mono text-white bg-gray-800/70 px-2 py-0.5 rounded-md border border-gray-700">
+                      ${classroom.unique_code}
+                    </span>
+                  </div>
+
+                  <!-- Footer -->
+                  <a
+                    href="/view-classroom/${classroom.unique_code}/"
+                    class="block w-full bg-[#094cdc] hover:bg-[#1a5eff] text-white py-2.5 rounded-md 
+                           font-semibold shadow-md text-center transition transform hover:scale-[1.02]"
+                  >
+                    View Class
+                  </a>
+                </div>
+              `;
+
+              joinedClassesDiv.appendChild(classItem);
+          });
+      })
+      .catch(error => console.error("Error fetching classes:", error));
+}
+
+document.addEventListener("DOMContentLoaded", fetchJoinedClasses);
+
+
+async function confirmDeleteAccount() {
+    const confirmDelete = confirm("Are you sure you want to delete your account? This action cannot be undone!");
+    
+    if (confirmDelete) {
+        const response = await fetch("{% url 'delete_account' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            }
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            alert("Your account has been deleted.");
+            window.location.href = "{% url 'base' %}"; // Redirect to login or home page
+        } else {
+            alert(result.error);
+        }
+    }
+}
+document.addEventListener("DOMContentLoaded", async function () {
+  try {
+    const response = await fetch("{% url 'get_user_profile' %}"); // Django API endpoint
+    const data = await response.json();
+
+    console.log("User Profile Data:", data); // Debugging
+
+    if (response.ok) {
+      document.getElementById("userName").textContent =
+        "Welcome, " + data.first_name + " " + data.last_name; // Display both names
+
+      const profileImageDesktop = document.getElementById("profileImage");
+      const profileImageMobile = document.getElementById("profileImageMobile");
+
+      if (data.profile_picture) {
+        profileImageDesktop.src = data.profile_picture; // Set desktop profile image
+        if (profileImageMobile) {
+          profileImageMobile.src = data.profile_picture; // Set mobile profile image
+        }
+      } else {
+        profileImageDesktop.src = "/static/default-profile.png"; // Fallback desktop image
+        if (profileImageMobile) {
+          profileImageMobile.src = "/static/default-profile.png"; // Fallback mobile image
+        }
+      }
+    } else {
+      console.error("Error fetching user profile:", data.error);
+    }
+  } catch (error) {
+    console.error("Error loading profile:", error);
+  }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    const fabButton = document.getElementById("fabButton");
+    const fabOptions = document.getElementById("fabOptions");
+    const createClassBtn = document.getElementById("createClassBtn");
+    const createClassModal = document.getElementById("createClassModal");
+    const closeModalBtns = document.querySelectorAll(".closeModal");
+    const createClassForm = document.getElementById("createClassForm");
+    const modalContent = document.querySelector(".modal-content");
+
+    // Django URL (ensure this is inside a template file)
+    const createClassURL = "{% url 'create_classroom' %}";  // Fixed incorrect syntax
+
+    // Toggle FAB menu
+    let isFabOpen = false;
+    fabButton.addEventListener("click", function () {
+        isFabOpen = !isFabOpen;
+        fabOptions.classList.toggle("hidden", !isFabOpen);
+    });
+
+    // Open Create Class Modal
+    createClassBtn.addEventListener("click", function () {
+        createClassModal.classList.remove("hidden");
+    });
+
+    // Close Modal
+    closeModalBtns.forEach(button => {
+        button.addEventListener("click", function () {
+            createClassModal.classList.add("hidden");
+        });
+    });
+
+    // Fix: Prevent modal from closing when clicking inside the form
+    createClassModal.addEventListener("click", function (event) {
+        if (!modalContent.contains(event.target) && event.target !== createClassModal) {
+            createClassModal.classList.add("hidden");
+        }
+    });
+
+    // Function to get CSRF token from cookies
+    function getCSRFToken() {
+        let cookieValue = null;
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith("csrftoken=")) {
+                cookieValue = decodeURIComponent(cookie.substring("csrftoken=".length));
+                break;
+            }
+        }
+        return cookieValue;
+    }
+
+    // Handle form submission
+    createClassForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const name = document.getElementById("className").value;
+        const subject = document.getElementById("classSubject").value;
+
+        try {
+            const response = await fetch(createClassURL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken()
+                },
+                body: JSON.stringify({ name, subject })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert("Classroom Created Successfully!");
+                createClassModal.classList.add("hidden");
+
+                if (typeof loadClassrooms === "function") {
+                    loadClassrooms(); // Ensure function exists before calling
+                }
+            } else {
+                alert(result.error);
+            }
+        } catch (error) {
+            console.error("Error creating classroom:", error);
+            alert("Failed to create classroom. Please try again.");
+        }
+    });
+});
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const joinClassBtn = document.getElementById("joinClassBtn");
+    const joinClassModal = document.getElementById("joinClassModal");
+    const closeJoinModalBtns = document.querySelectorAll(".closeJoinModal");
+    const joinClassForm = document.getElementById("joinClassForm");
+
+    // Open Join Class Modal
+    joinClassBtn.addEventListener("click", function () {
+        joinClassModal.classList.remove("hidden");
+    });
+
+    // Close Modal
+    closeJoinModalBtns.forEach(button => {
+        button.addEventListener("click", function () {
+            joinClassModal.classList.add("hidden");
+        });
+    });
+
+    // Close modal if clicking outside the content
+    joinClassModal.addEventListener("click", function (event) {
+        if (event.target === joinClassModal) {
+            joinClassModal.classList.add("hidden");
+        }
+    });
+
+    // Handle form submission
+    joinClassForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const classCode = document.getElementById("classCode").value.trim();
+
+        if (!classCode) {
+            alert("Please enter a class code.");
+            return;
+        }
+
+        console.log("Joining class with code:", classCode); // Debugging log
+
+        fetch("{% url 'join_class' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCookie("csrftoken"), // Ensure CSRF token is included
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams({ "class_code": classCode })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Server Response:", data); // Debugging: Log response to console
+            if (data.exists) {
+                if (data.already_joined) {
+                    alert("You have already joined this class.");
+                } else {
+                    alert("Successfully joined the class!");
+                    fetchJoinedClasses(); // Refresh the joined classes list
+                    joinClassModal.classList.add("hidden"); // Close modal upon success
+                }
+            } else {
+                alert("Class not found. Please enter a valid class code.");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An error occurred. Please try again.");
+        });
+    });
+
+    // Function to get CSRF token from cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+</body>
+</html>
+

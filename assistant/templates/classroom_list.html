@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sahayak.AI - AI Teacher Assistant</title>
+
+  <!-- Fonts / Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet"/>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6366f1',
+            secondary: '#a855f7'
+          },
+          borderRadius: {
+            'none': '0px',
+            'sm': '4px',
+            DEFAULT: '8px',
+            'md': '12px',
+            'lg': '16px',
+            'xl': '20px',
+            '2xl': '24px',
+            '3xl': '32px',
+            'full': '9999px',
+            'button': '8px'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* (Kept) Previous icon shim – disabled to avoid overriding Remix Icon glyphs */
+    /* :where([class^="ri-"])::before { content: "\f3c2"; } */
+
+    .modal { opacity: 0; visibility: hidden; transition: all .3s ease; }
+    .modal.active { opacity: 1; visibility: visible; }
+
+    /* Hide scrollbars inside the student list area while keeping scroll */
+    .max-h-60::-webkit-scrollbar, .max-h-56::-webkit-scrollbar { display:none; }
+    .max-h-60, .max-h-56 { -ms-overflow-style: none; scrollbar-width: none; }
+    ::-webkit-scrollbar {
+      display: none;
+    }
+    
+    /* Hide scrollbar for IE, Edge, Firefox */
+    html, body {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none; 
+      background: radial-gradient(ellipse 140% 60% at 50% 115%, #001a33 0%, transparent 70%),
+      linear-gradient(to top, #020617 0%,  #001a33 100%);
+    background-repeat: no-repeat;    /* Firefox */
+    }
+  </style>
+</head>
+
+<body class="bg-gray-900 text-gray-100">
+  <div class="flex min-h-screen">
+    <!-- Sidebar (z-[60]) -->
+    <aside id="sidebar"
+      class="hidden md:block md:fixed md:top-0 md:left-0 md:w-64 md:h-screen
+             bg-gray-900 border-r border-gray-800 p-6 md:overflow-y-auto
+             shadow-lg z-[60]"
+             style="
+         background:#020617;
+         border-right: 0.5px solid #fff;
+       ">
+       <div class="mb-14  flex items-center -gap-1 justify-start mt-2 -ml-4">
+        <!-- Image on left -->
+        <div class="w-16 h-16 overflow-hidden rounded-full">
+          <img src="/static/images/logo (3).png" alt="Sahayak.AI"
+               class="w-full h-full object-cover cursor-pointer"/>
+        </div>
+        
+        
+        <!-- Text on right -->
+        <div class="flex flex-col">
+          <h1 class="text-2xl font-sans text-white tracking-wide ">Sahayak.AI</h1>
+          <p class="text-sm text-gray-400 mt-1">Empowering Classrooms</p>
+        </div>
+      </div>
+
+      <nav class="space-y-8 text-sm">
+        <div>
+          <p class="text-gray-500 uppercase font-semibold text-xs tracking-wider mb-3">Main</p>
+          <a href="/home/" id="homeBtn" class="flex items-center gap-3 px-2.5 py-1.5 rounded-md text-white hover:bg-gray-800 transition w-full group">
+            <i class="ri-book-line text-lg group-hover:text-white"></i>
+            <span>Home</span>
+          </a>
+        </div>
+
+        
+
+        <div>
+          <p class="text-gray-500 uppercase font-semibold text-xs tracking-wider mb-3">Tools</p>
+          <div class="space-y-2">
+            <a href="{% url 'progress_page' %}" class="flex items-center gap-3 px-2.5 py-1.5 rounded-md text-white hover:bg-gray-800 transition group">
+              <i class="ri-line-chart-line text-lg group-hover:text-white"></i>
+              <span>Progress</span>
+            </a>
+            <a href="{% url 'chatbot' %}" class="flex items-center gap-3 px-2.5 py-1.5 rounded-md text-white hover:bg-gray-800 transition group">
+              <i class="ri-robot-line text-lg group-hover:text-white"></i>
+              <span>Ask Syncrona</span>
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <p class="text-gray-500 uppercase font-semibold text-xs tracking-wider mb-3">Settings</p>
+          <a href="/settings/" class="flex items-center gap-3 px-2.5 py-1.5 rounded-md text-white hover:bg-gray-800 transition group">
+            <i class="ri-settings-line text-lg group-hover:text-white"></i>
+            <span>Settings</span>
+          </a>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Bottom bar (mobile) (z-[60]) -->
+    <nav class="fixed bottom-0 left-0 right-0 z-[50] bg-[#020617]/80 backdrop-blur-md flex justify-between items-center h-14 px-16 md:hidden" style="border-top: 0.5px solid #fff;">
+
+      <!-- Home Button -->
+      <a href="/home/" class="flex items-center justify-center w-12 h-12 transition-all">
+        <img src="/static/images/image.png" 
+             alt="Home" 
+             class="w-6 h-6 filter invert">
+      </a>
+      
+      
+      
+    
+      <!-- Progress Button -->
+      
+    
+      <!-- Chatbot Button -->
+      <a href="{% url 'chatbot' %}" 
+       class="flex items-center justify-center w-16 h-16 mb-5 rounded-full bg-blue-600 border border-white transition-all">
+      <img src="/static/images/bot.png" alt="Syncrona" class="w-6 h-6 filter brightness-0 invert">
+    </a>
+    
+    
+    <a href="{% url 'progress_page' %}" class="flex items-center justify-center w-12 h-12 transition-all">
+      <img src="/static/images/performance.png" alt="Progress" class="w-6 h-6 filter  invert ">
+    </a>
+      <!-- My Classes Button -->
+      
+    
+      <!-- Joined Classes Button -->
+      
+    
+    </nav>
+
+    <!-- Main wrapper (z-[20]) -->
+    <div class="flex flex-col flex-1 h-screen overflow-y-auto md:ml-64">
+      <!-- Header / Navbar (z-[50]) -->
+      <header class="fixed top-0 left-0 right-0 h-14 flex bg-[#020617] items-center bg- justify-between px-4 md:px-8 shadow-lg z-[40] border-b border-white/50"
+          >
+    <!-- Left: Logo -->
+    <div class="flex items-center gap-2 -ml-2 md:ml-0">
+      <img src="/static/images/logo (3).png" alt="Sahayak.AI" class="w-10 h-10" />
+      <span class="sr-only">Sahayak.AI</span>
+    </div>
+
+    <!-- Right: Actions -->
+    <div class="flex items-center gap-2 md:gap-4">
+      <!-- Notifications -->
+      <button aria-label="Notifications"
+        class="relative p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+        <i class="ri-notification-3-line text-2xl"></i>
+        <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-gray-900 animate-pulse"></span>
+      </button>
+
+      <!-- Desktop profile -->
+      <div class="hidden md:flex items-center space-x-2  space-y-reverse relative h-10" id="desktopUserMenu">
+        <img id="profileImage" src="/static/default-profile.png" alt="User Profile"
+           class="w-10 h-10 rounded-full object-cover border border-gray-600 cursor-pointer"/>
+      <button id="userMenuButton"
+              class="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-gray-700 transition focus:outline-none h-full">
+        <span id="userName" class="text-white font-medium">Loading...</span>
+        <i class="ri-arrow-down-s-line text-lg text-gray-400 group-hover:text-white"></i>
+      </button>
+    
+          <!-- Dropdown -->
+          <div id="userDropdown"
+         class="hidden absolute right-0 top-full mt-2 w-48 bg-gray-900 rounded-lg shadow-2xl py-2 
+                border border-gray-700 text-sm z-[70]">
+    
+            <a href="{% url 'profile' %}" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">Profile</a>
+            <a href="{% url 'settings' %}" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">Settings</a>
+            <form method="POST" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button type="submit" 
+                      class="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">
+                Sign out
+              </button>
+            </form>
+          </div>
+        </div>
+    
+        <!-- Mobile profile -->
+        <!-- Mobile User Menu -->
+    <!-- Mobile User Menu -->
+    <div class="md:hidden flex items-center relative" id="mobileUserMenu">
+      
+      <button id="mobileUserMenuButton" class="flex items-center -translate-y-1">
+        <img id="profileImageMobile" src="/static/default-profile.png" alt="User Profile"
+             class="w-9 h-9 rounded-full object-cover border border-gray-600 cursor-pointer"/>
+      </button>
+      
+    
+      <!-- Dropdown -->
+      <div id="mobileUserDropdown"
+           class="hidden absolute right-0 top-full mt-2 w-40 bg-gray-900 rounded-lg shadow-2xl py-2 border border-gray-700 text-sm z-[70]">
+        <a href="{% url 'profile' %}" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">Profile</a>
+        <a href="{% url 'settings' %}" class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">Settings</a>
+        <form method="POST" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white">
+            Sign out
+          </button>
+        </form>
+      </div>
+    </div>
+    </div>
+  </header>
+
+      <!-- Page content wrapper -->
+      <div class="flex flex-col flex-1 h-screen overflow-y-auto w-full md:ml-10 md:mr-10 pt-20 pb-24 md:pb-10 z-[20]">
+
+        <main class="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+
+          <!-- Class Details -->
+          <section class="p-4 sm:p-6 rounded-xl shadow-md mb-6" style="border: 0.5px solid #fff; background:#020617;">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center">
+                <svg class="w-6 h-6 text-white mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                  <path d="M20 17V4H8v13"></path>
+                  <path d="M16 9h-8"></path>
+                </svg>
+                <h2 class="text-xl sm:text-2xl font-bold text-white">Class Details</h2>
+              </div>
+          
+              <!-- Leave Classroom Trigger Button -->
+              <button onclick="openLeaveModal()" 
+  class="px-4 py-1 border border-white text-white text-center mt-2 rounded-lg transition 
+         hover:bg-[#ff073a] hover:border-[#ff073a] hover:text-white relative -translate-y-0.5">
+         <i class="ri-logout-box-r-line text-lg"></i>
+</button>
+
+            
+            </div>
+          
+            <div class="space-y-2 text-gray-300 text-sm sm:text-base">
+              <p><strong>Course Name:</strong> {{ classroom.name }}</p>
+              <p><strong>Instructor:</strong> {{ classroom.teacher.get_full_name }}</p>
+              <p><strong>Class Code:</strong>
+                <span class="font-mono bg-gray-700 px-3 py-1 rounded-md">{{ classroom.unique_code }}</span>
+              </p>
+            </div>
+          </section>
+          
+          <!-- Leave Classroom Modal -->
+          <div id="leaveModal" 
+     class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+  <div id="leaveModalContent"
+       class="bg-[#0f172a] rounded-xl shadow-lg p-4 sm:p-6 w-[90%] sm:max-w-sm text-white mt-10 
+              transform scale-95 opacity-0 transition-all duration-300 ease-out z-[10000]">
+    
+    <h3 class="text-base sm:text-lg font-semibold mb-3">Leave Classroom</h3>
+    <p class="text-gray-300 mb-5 text-sm sm:text-base">
+      Are you sure you want to leave <strong>{{ classroom.name }}</strong>?
+    </p>
+
+    <div class="flex justify-end space-x-2 sm:space-x-3">
+      <button onclick="closeLeaveModal()" 
+        class="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-sm sm:text-base transition">
+        Cancel
+      </button>
+
+      <form method="POST" action="{% url 'leave_classroom' classroom.id %}">
+        {% csrf_token %}
+        <button type="submit" 
+          class="px-3 sm:px-4 py-1.5 sm:py-2 border border-white text-white text-sm sm:text-base text-center rounded-lg transition 
+                 hover:bg-[#ff073a] hover:border-[#ff073a] hover:text-white">
+          Leave
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openLeaveModal() {
+    const modal = document.getElementById("leaveModal");
+    const content = document.getElementById("leaveModalContent");
+    modal.classList.remove("hidden");
+    setTimeout(() => {
+      content.classList.remove("scale-95", "opacity-0");
+      content.classList.add("scale-100", "opacity-100");
+    }, 10);
+  }
+
+  function closeLeaveModal() {
+    const modal = document.getElementById("leaveModal");
+    const content = document.getElementById("leaveModalContent");
+    content.classList.add("scale-95", "opacity-0");
+    content.classList.remove("scale-100", "opacity-100");
+    setTimeout(() => {
+      modal.classList.add("hidden");
+    }, 200);
+  }
+</script>
+
+          
+
+          <!-- Floating Student Button + Card (z-[40]) -->
+          <div class="fixed bottom-20 sm:bottom-8 right-5 z-[40]">
+            <!-- Card -->
+            <div id="studentCard"
+     class="hidden absolute bottom-16 right-0 w-72 sm:w-80 
+            backdrop-blur-lg p-4 rounded-2xl shadow-2xl z-[60] border border-white"
+     style="background:#020617;">
+
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-700">
+    <div class="flex items-center">
+      <svg class="w-5 h-5 text-blue-400 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M17 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M7 21v-2a4 4 0 0 1 3-3.87"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      <h2 class="text-base font-semibold text-white">Joined Students</h2>
+    </div>
+    <span class="text-xs text-gray-400">
+      {{ classroom.students.count }} total
+    </span>
+  </div>
+
+  <!-- Student List -->
+  {% if classroom.students.all %}
+  <div class="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scroll">
+    {% for student in classroom.students.all %}
+    <div class="bg-gray-800/80 hover:bg-gray-700 transition p-3 rounded-lg shadow-sm">
+      <p class="text-white text-sm font-medium">{{ student.get_full_name }}</p>
+      <p class="text-gray-400 text-xs">@{{ student.email }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-gray-500 text-sm text-center py-4">No students have joined yet.</p>
+  {% endif %}
+</div>
+
+
+            <!-- Button -->
+            <button id="toggleButton"
+                    class="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-full shadow-lg transition"
+                    aria-controls="studentCard" aria-expanded="false">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <circle cx="12" cy="8" r="4"></circle>
+                <path d="M6 20v-2a6 6 0 0112 0v2"></path>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Classwork -->
+          <section class=" p-4 sm:p-6 rounded-xl shadow-md relative mb-6 sm:mb-8" style="border: 0.5px solid #fff; 
+          background:#020617;">
+            <div class="flex justify-between items-center mb-3 sm:mb-4">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path>
+                </svg>
+                <h2 class="text-lg sm:text-2xl font-bold text-white">Classwork</h2>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button id="fetch-classwork"
+                        class="px-3 py-1.5 rounded-md border border-gray-700 text-gray-200 hover:bg-gray-800 text-sm">
+                  Refresh
+                </button>
+                {% if user.is_authenticated and classroom.teacher.id == user.id %}
+                <button onclick="openAddWorkModal()"
+                        class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md shadow flex items-center gap-1 text-sm sm:text-base">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 5v14m7-7H5"></path>
+                  </svg>
+                  <span class="hidden xs:inline">Add</span>
+                </button>
+                {% endif %}
+              </div>
+            </div>
+
+            <ul id="classwork-container" class="text-gray-300 space-y-3 sm:space-y-4 text-sm sm:text-base">
+              <p class="text-gray-500 text-xs sm:text-sm">Click "Refresh" to load classwork.</p>
+            </ul>
+          </section>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Work Modal (TOP MOST) (z-[100]) -->
+  {% if user.is_authenticated and not user.is_teacher and classroom.classworks.exists %}
+<div id="uploadWorkModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/50 transition-opacity duration-300">
+  <div class="bg-gray-900/80 backdrop-blur-xl p-3 sm:p-5 md:p-6 rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-sm md:max-w-md relative ring-1 ring-white/20 border border-white/20">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4 sm:mb-5 border-b border-white/20 pb-2">
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M4 16v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"></path>
+          <polyline points="16 3 12 7 8 3"></polyline>
+          <line x1="12" y1="7" x2="12" y2="15"></line>
+        </svg>
+        <h3 class="text-lg sm:text-xl md:text-2xl font-extrabold text-white tracking-wide">Upload Work</h3>
+      </div>
+      <button onclick="closeUploadWorkModal()" class="text-gray-400 hover:text-white text-2xl sm:text-3xl leading-none transition-colors">&times;</button>
+    </div>
+
+    <!-- Selected Classwork -->
+    <p class="text-xs sm:text-sm text-gray-300 mb-4">
+      For : <span id="selected-classwork-title" class="font-semibold text-white">—</span>
+    </p>
+
+    <!-- Form -->
+    <form id="upload-form" class="space-y-3 sm:space-y-4">
+      {% csrf_token %}
+      <input type="hidden" id="modal-classwork-id" name="classwork_id"/>
+
+      <!-- Classwork Select -->
+      <div id="upload-select-wrapper">
+        <label class="block text-xs sm:text-sm font-medium text-gray-300 mb-1">Select Classwork</label>
+        <select id="classwork-select" class="w-full bg-gray-800/70 text-white p-2 sm:p-3 rounded-xl border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-shadow text-sm sm:text-base" required>
+          {% for work in classroom.classworks.all %}
+            <option value="{{ work.id }}">{{ work.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- File Input (Custom Button) -->
+      <div>
+        <label class="block text-xs sm:text-sm font-medium text-gray-300 mb-1">Upload File</label>
+        <div class="relative">
+          <label for="file-upload" id="file-label" class="flex items-center justify-between w-full p-2 sm:p-3 rounded-xl border border-white/30 bg-gray-800/60 cursor-pointer hover:bg-gray-800/80 transition-all text-white text-sm sm:text-base font-medium">
+            <span class="flex items-center space-x-1 sm:space-x-2">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M4 16v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"></path>
+                <polyline points="16 3 12 7 8 3"></polyline>
+                <line x1="12" y1="7" x2="12" y2="15"></line>
+              </svg>
+              <span id="file-name" class="text-xs sm:text-sm">Choose File</span>
+            </span>
+            <span class="text-gray-400 text-xs sm:text-sm">Max 20MB</span>
+          </label>
+          <input type="file" id="file-upload" accept=".pdf,.docx,.png,.jpg,.jpeg" class="hidden" required onchange="document.getElementById('file-name').textContent = this.files[0]?.name || 'Choose File'">
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex justify-end space-x-2 sm:space-x-3 mt-2">
+        <button type="button" onclick="closeUploadWorkModal()" class="text-white border border-white/30 px-4 sm:px-6 py-1.5 sm:py-2 rounded-xl hover:bg-gray-800/70 transition-all text-sm sm:text-base">Cancel</button>
+        <button type="submit" class="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 px-4 sm:px-6 py-1.5 sm:py-2 rounded-xl text-white font-semibold transition-all shadow-md hover:shadow-lg text-sm sm:text-base">Upload</button>
+      </div>
+
+      <!-- Status messages -->
+      <p id="upload-status" class="text-green-400 mt-2 hidden font-medium text-sm sm:text-base">File uploaded successfully!</p>
+      <p id="upload-error" class="text-red-400 mt-2 hidden font-medium text-sm sm:text-base"></p>
+    </form>
+
+  </div>
+</div>
+{% endif %}
+
+
+
+  <!-- Add Classwork Modal (below Upload modal) (z-[90]) -->
+  <div id="addWorkModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/50 transition-opacity duration-300">
+    <div class="bg-gray-900/80 backdrop-blur-xl p-4 sm:p-5 md:p-6 rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-sm md:max-w-md relative ring-1 ring-white/20 border border-white/20">
+      
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-5 border-b border-white/20 pb-2">
+        <div class="flex items-center space-x-2">
+          <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M4 16v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"></path>
+            <polyline points="16 3 12 7 8 3"></polyline>
+            <line x1="12" y1="7" x2="12" y2="15"></line>
+          </svg>
+          <h3 class="text-xl sm:text-2xl font-extrabold text-white tracking-wide">Add Classwork</h3>
+        </div>
+        <button onclick="closeAddWorkModal()" class="text-gray-400 hover:text-white text-2xl leading-none transition-colors">&times;</button>
+      </div>
+  
+      <!-- Form -->
+      <form id="addWorkForm" enctype="multipart/form-data" class="space-y-4 sm:space-y-5">
+        {% csrf_token %}
+  
+        <!-- Title -->
+        <div>
+          <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Title</label>
+          <input id="title" name="title" type="text" placeholder="Enter title" required
+                 class="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-gray-800/70 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-shadow text-sm sm:text-base"/>
+        </div>
+  
+        <!-- Description -->
+        <div>
+          <label for="description" class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+          <textarea id="description" name="description" placeholder="Enter description" rows="3"
+                    class="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-gray-800/70 text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow text-sm sm:text-base"></textarea>
+        </div>
+  
+        <!-- Category -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-300 mb-2">Category</label>
+          
+          <div class="relative w-full">
+            <!-- Hidden original select -->
+            <select id="category" name="category" class="hidden">
+              <option value="" disabled selected>Select category</option>
+              <option value="notes">Notes</option>
+              <option value="assignment">Assignment</option>
+              <option value="test">Test</option>
+            </select>
+        
+            <!-- Custom dropdown button -->
+            <button id="categoryBtn" type="button"
+                    class="w-full bg-gray-800 text-white px-4 py-2 rounded-full flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <span id="categorySelected">Select category</span>
+              <i class="ri-arrow-down-s-line text-lg"></i>
+            </button>
+        
+            <!-- Options -->
+            <ul id="categoryOptions" class="hidden absolute z-20 w-full mt-1 bg-gray-800 rounded-xl shadow-lg border border-gray-400/30 text-white text-sm">
+              <li data-value="notes" class="px-4 py-2 hover:bg-gray-700 rounded-full flex items-center gap-2 cursor-pointer transition-colors">
+                <span class="w-3 h-3 rounded-full bg-gray-400 inline-block"></span> Notes
+              </li>
+              <li data-value="assignment" class="px-4 py-2 hover:bg-gray-700 rounded-full flex items-center gap-2 cursor-pointer transition-colors">
+                <span class="w-3 h-3 rounded-full bg-blue-500 inline-block"></span> Assignment
+              </li>
+              <li data-value="test" class="px-4 py-2 hover:bg-gray-700 rounded-full flex items-center gap-2 cursor-pointer transition-colors">
+                <span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span> Test
+              </li>
+            </ul>
+          </div>
+        </div>
+  
+        <!-- Deadline -->
+        <div id="deadlineField" class="hidden">
+          <label for="deadline" class="block text-sm font-medium text-gray-300 mb-1">Deadline</label>
+          <input type="datetime-local" id="deadline" name="deadline"
+                 class="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base [color-scheme:dark]">
+        </div>
+  
+        <!-- File Upload -->
+        <div class="form-group">
+          <label for="file-upload" class="block text-sm font-semibold text-gray-200 mb-2">Attach File</label>
+          <div class="relative flex items-center justify-between px-4 py-3 rounded-xl border border-dashed border-gray-500/40 bg-gray-800/50 hover:bg-gray-800/70 transition-all cursor-pointer">
+            <input type="file" id="file-upload" name="file"
+                   accept=".pdf,.docx,.png,.jpg,.jpeg"
+                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                   onchange="document.getElementById('file-chosen').textContent = this.files[0]?.name || 'No file chosen'">
+            <div class="flex items-center space-x-3 pointer-events-none">
+              <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M4 16v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"></path>
+                <polyline points="16 3 12 7 8 3"></polyline>
+                <line x1="12" y1="7" x2="12" y2="15"></line>
+              </svg>
+              <span class="text-gray-300 text-sm sm:text-base">Click to browse or drag & drop</span>
+            </div>
+            <span class="text-xs text-gray-400 pointer-events-none">Max 20MB</span>
+          </div>
+          <p id="file-chosen" class="mt-3 text-sm font-medium text-blue-400">No file chosen</p>
+        </div>
+  
+        <!-- Buttons -->
+        <div class="flex justify-end space-x-2 sm:space-x-3 mt-2">
+          <button type="button" onclick="closeAddWorkModal()" class="text-white border border-white/30 px-4 sm:px-6 py-1.5 sm:py-2 rounded-xl hover:bg-gray-800/70 transition-all text-sm sm:text-base">Cancel</button>
+          <button type="submit" class="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 px-4 sm:px-6 py-1.5 sm:py-2 rounded-xl text-white font-semibold transition-all shadow-md hover:shadow-lg text-sm sm:text-base">Submit</button>
+        </div>
+  
+        <p id="addwork-status" class="text-green-400 mt-2 hidden font-medium text-sm sm:text-base">Classwork added successfully!</p>
+        <p id="addwork-error" class="text-red-400 mt-2 hidden font-medium text-sm sm:text-base"></p>
+      </form>
+    </div>
+  </div>
+  
+  <script>
+  function openAddWorkModal(){ 
+    document.getElementById('addWorkModal').classList.remove('hidden'); 
+  }
+  function closeAddWorkModal(){ 
+    document.getElementById('addWorkModal').classList.add('hidden'); 
+  }
+  
+  // Category + Deadline handling
+  const categoryBtn = document.getElementById("categoryBtn");
+  const categoryOptions = document.getElementById("categoryOptions");
+  const categorySelect = document.getElementById("category");
+  const categorySelected = document.getElementById("categorySelected");
+  const deadlineField = document.getElementById("deadlineField");
+  const deadlineInput = document.getElementById("deadline");
+  
+  categoryBtn.addEventListener("click", () => {
+    categoryOptions.classList.toggle("hidden");
+  });
+  
+  categoryOptions.querySelectorAll("li").forEach(option => {
+    option.addEventListener("click", () => {
+      const value = option.dataset.value;
+      categorySelected.textContent = option.textContent.trim();
+      categorySelect.value = value; 
+      categoryOptions.classList.add("hidden");
+  
+      // ✅ Show deadline only for assignment or test
+      if (value === "assignment" || value === "test") {
+        deadlineField.classList.remove("hidden");
+        deadlineInput.required = true;
+  
+        // prevent past date selection
+        const now = new Date();
+        const localISOTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+                             .toISOString().slice(0,16);
+        deadlineInput.min = localISOTime;
+      } else {
+        deadlineField.classList.add("hidden");
+        deadlineInput.required = false;
+        deadlineInput.value = "";
+      }
+    });
+  });
+  
+  // Close dropdown when clicking outside
+  document.addEventListener("click", e => {
+    if (!categoryBtn.contains(e.target) && !categoryOptions.contains(e.target)) {
+      categoryOptions.classList.add("hidden");
+    }
+  });
+  
+  // Form submission
+  document.getElementById("addWorkForm")?.addEventListener("submit", async function(e){
+    e.preventDefault();
+    const formData = new FormData(this);
+    const url = "{% url 'add_classwork' classroom.id %}";
+    const csrf = this.querySelector("[name=csrfmiddlewaretoken]").value;
+    try{
+      const res = await fetch(url,{ method:"POST", body:formData, headers:{ "X-CSRFToken": csrf }});
+      const data = await res.json();
+      if(res.ok){ 
+        alert("Classwork added successfully!"); 
+        closeAddWorkModal(); 
+        location.reload(); 
+      } else { 
+        alert(data.error || "An error occurred"); 
+      }
+    }catch(err){ 
+      console.error(err); 
+      alert("An error occurred. Please try again."); 
+    }
+  });
+  </script>
+  
+  
+  
+      
+  
+  
+
+  <!-- File Preview Modal (above navbar, below add/upload) (z-[80]) -->
+  <div id="fileModal" 
+     class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-[80]">
+  <div class="bg-gray-900 p-4 sm:p-5 rounded-xl w-[90%] sm:w-full max-w-xs sm:max-w-md relative">
+    
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-3">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-white mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M4 4h16v16H4z"></path>
+          <path d="M8 4v16"></path>
+          <path d="M4 8h16"></path>
+        </svg>
+        <h2 class="text-white text-base sm:text-lg font-medium">File Preview</h2>
+      </div>
+      <button id="closeModal" class="text-white text-2xl leading-none">&times;</button>
+    </div>
+
+    <!-- PDF Viewer -->
+    <div id="pdfViewerContainer" class="hidden">
+      <div class="max-h-60 overflow-auto custom-scroll rounded-md">
+        <canvas id="pdfCanvas" class="w-full"></canvas>
+      </div>
+      <div class="flex justify-between mt-2 text-xs sm:text-sm text-white">
+        <button id="prevPage" class="bg-gray-700 px-2 sm:px-3 py-1 rounded">Prev</button>
+        <span>Page <span id="pageNum"></span> of <span id="pageCount"></span></span>
+        <button id="nextPage" class="bg-gray-700 px-2 sm:px-3 py-1 rounded">Next</button>
+      </div>
+    </div>
+
+    <!-- PPT Viewer -->
+    <div class="max-h-60 overflow-auto custom-scroll rounded-md">
+      <iframe id="pptViewer" class="hidden w-full h-60"></iframe>
+    </div>
+
+    <!-- Image Viewer -->
+    <div class="max-h-60 overflow-auto custom-scroll rounded-md">
+      <img id="imageViewer" class="hidden w-full" />
+    </div>
+  </div>
+</div>
+
+<!-- Custom scrollbar styles -->
+<style>
+  .custom-scroll {
+    scrollbar-width: thin;         
+    scrollbar-color: #555 #222;    
+  }
+  .custom-scroll::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scroll::-webkit-scrollbar-track {
+    background: #222;
+    border-radius: 10px;
+  }
+  .custom-scroll::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 10px;
+  }
+  .custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: #777;
+  }
+</style>
+
+  <!-- Feedback Modal -->
+  <div id="feedbackModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100]">
+    <div class="bg-gray-900/95 text-white rounded-2xl shadow-xl w-full max-w-md p-6 relative border border-gray-700">
+      <!-- Close Button -->
+      <button id="closeFeedbackModal" 
+        class="absolute top-3 right-3 text-gray-400 hover:text-white text-xl font-bold">&times;</button>
+  
+      <h3 class="text-xl font-bold mb-2">Your Feedback</h3>
+      <hr class="border-gray-600 mb-4">
+  
+      <div id="feedbackContent" class="space-y-3 text-gray-200 text-sm">
+        <p class="italic text-gray-400">Loading...</p>
+      </div>
+    </div>
+  </div>
+  
+
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script>
+    // ===== Profile + Menus =====
+    document.addEventListener("DOMContentLoaded", () => {
+      // Load profile data
+      (async () => {
+        try {
+          const res = await fetch("{% url 'get_user_profile' %}");
+          const data = await res.json();
+          if (res.ok) {
+            document.getElementById("userName").textContent = "Welcome, " + data.first_name + " " + data.last_name;
+            const desk = document.getElementById("profileImage");
+            const mob = document.getElementById("profileImageMobile");
+            const src = data.profile_picture || "/static/default-profile.png";
+            desk.src = src; if (mob) mob.src = src;
+          }
+        } catch(e) { console.error(e); }
+      })();
+
+      // Desktop dropdown
+      const desktopButton = document.getElementById("userMenuButton");
+      const desktopDropdown = document.getElementById("userDropdown");
+      if (desktopButton && desktopDropdown) {
+        desktopButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          desktopDropdown.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          if (!desktopDropdown.contains(e.target) && e.target !== desktopButton) {
+            desktopDropdown.classList.add("hidden");
+          }
+        });
+      }
+
+      // Mobile dropdown
+      const mobileProfileImg = document.getElementById("profileImageMobile");
+      const mobileDropdown = document.getElementById("mobileUserDropdown");
+      if (mobileProfileImg && mobileDropdown) {
+        mobileProfileImg.addEventListener("click", (e) => {
+          e.stopPropagation();
+          mobileDropdown.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          if (!mobileDropdown.contains(e.target) && e.target !== mobileProfileImg) {
+            mobileDropdown.classList.add("hidden");
+          }
+        });
+      }
+    });
+
+    // ===== Floating Student Card =====
+    document.getElementById('toggleButton')?.addEventListener('click', function () {
+      const studentCard = document.getElementById('studentCard');
+      const expanded = studentCard.classList.toggle('hidden') ? 'false' : 'true';
+      this.setAttribute('aria-expanded', expanded);
+    });
+
+    // ===== Add Work Modal =====
+    
+
+    // ===== Upload Work Modal (open from classwork list OR directly) =====
+    function openUploadWorkModal(btn){
+      const modal = document.getElementById("uploadWorkModal");
+      if(!modal) return;
+      const idInput = document.getElementById("modal-classwork-id");
+      const titleSpan = document.getElementById("selected-classwork-title");
+      const selectWrap = document.getElementById("upload-select-wrapper");
+      const select = document.getElementById("classwork-select");
+
+      // If opened from a button in list
+      if(btn?.dataset?.workId){
+        idInput.value = btn.dataset.workId;
+        titleSpan.textContent = btn.dataset.workTitle || "Selected Classwork";
+        selectWrap.classList.add("hidden");
+      } else {
+        // Opened directly; use select
+        idInput.value = "";
+        titleSpan.textContent = "—";
+        selectWrap.classList.remove("hidden");
+      }
+      modal.classList.remove("hidden");
+    }
+    function closeUploadWorkModal(){
+      const modal = document.getElementById("uploadWorkModal");
+      if(!modal) return;
+      modal.classList.add("hidden");
+      document.getElementById("upload-form").reset();
+      document.getElementById("upload-status").classList.add("hidden");
+      document.getElementById("upload-error").classList.add("hidden");
+    }
+
+    document.getElementById("upload-form")?.addEventListener("submit", function(event){
+      event.preventDefault();
+      const idHidden = document.getElementById("modal-classwork-id").value;
+      const select = document.getElementById("classwork-select");
+      const chosenId = idHidden || (select ? select.value : null);
+
+      const fileInput = document.getElementById("file-upload");
+      const uploadStatus = document.getElementById("upload-status");
+      const uploadError  = document.getElementById("upload-error");
+
+      if(!chosenId || !fileInput.files.length){
+        uploadError.textContent = "Please select a classwork and upload a file.";
+        uploadError.classList.remove("hidden");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("classwork_id", chosenId);
+      formData.append("file", fileInput.files[0]);
+
+      fetch("{% url 'upload_student_work' %}", {
+        method: "POST",
+        body: formData,
+        headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value }
+      })
+      .then(r=>r.json())
+      .then(data=>{
+        if(data.message){
+          uploadStatus.classList.remove("hidden");
+          uploadError.classList.add("hidden");
+          setTimeout(closeUploadWorkModal, 1200);
+        }else{
+          uploadError.textContent = data.error || "Upload failed. Please try again.";
+          uploadError.classList.remove("hidden");
+        }
+      })
+      .catch(()=>{
+        uploadError.textContent = "Error uploading file. Please check your connection.";
+        uploadError.classList.remove("hidden");
+      });
+    });
+
+    // ===== Classwork Fetch/Render =====
+    const isTeacher = {{ is_teacher|yesno:"true,false" }};
+    document.addEventListener("DOMContentLoaded", function(){
+      const classroomId = "{{ classroom.id }}";
+      const container = document.getElementById("classwork-container");
+      
+      const refreshBtn = document.getElementById("fetch-classwork");
+
+      function iconFor(fileUrl){
+        if(!fileUrl) return "<p class='text-gray-400 text-sm'>No file attached.</p>";
+        const ext = fileUrl.split('.').pop().toLowerCase();
+        if(ext === "pdf"){
+          return `<svg onclick="openPDF('${fileUrl}')" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-red-500 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M3 4a2 2 0 012-2h10l4 4v12a2 2 0 01-2 2H5a2 2 0 01-2-2V4z"></path>
+            <path d="M14 2v4h4"></path>
+            <text x="50%" y="70%" text-anchor="middle" font-size="7" font-family="Arial" fill="currentColor" font-weight="bold">PDF</text>
+          </svg>`;
+        }
+        if(["jpg","jpeg","png","gif","bmp","webp"].includes(ext)){
+          return `<svg onclick="openImage('${fileUrl}')" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-blue-500 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+            <circle cx="8" cy="10" r="2"></circle>
+            <path d="M21 18l-5-5-4 4-6-6-3 3"></path>
+            <text x="50%" y="95%" text-anchor="middle" font-size="6" font-family="Arial" fill="currentColor" font-weight="bold">IMG</text>
+          </svg>`;
+        }
+        if(["ppt","pptx"].includes(ext)){
+          return `<svg onclick="openPPT('${fileUrl}')" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-orange-500 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 6v6h6"></path>
+            <text x="50%" y="95%" text-anchor="middle" font-size="6" font-family="Arial" fill="currentColor" font-weight="bold">PPT</text>
+          </svg>`;
+        }
+        return `<a href="${fileUrl}" target="_blank" download>
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gray-500 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M3 4a2 2 0 012-2h10l4 4v12a2 2 0 01-2 2H5a2 2 0 01-2-2V4z"></path>
+            <path d="M14 2v4h4"></path>
+            <text x="50%" y="70%" text-anchor="middle" font-size="7" font-family="Arial" fill="currentColor" font-weight="bold">DOC</text>
+          </svg>
+        </a>`;
+      }
+
+      function renderList(items){
+        container.innerHTML = "";
+        if(!items || !items.length){
+          container.innerHTML = "<p class='text-gray-500 text-sm'>No classwork available.</p>";
+          return;
+        }
+        items.forEach(work=>{
+          const fileUrl = work.file_url ? new URL(work.file_url, window.location.origin).href : null;
+          const icon = iconFor(fileUrl);
+          const id = work.id;
+          const titleEsc = (work.title || "").replace(/"/g,'&quot;');
+
+          const teacherBtns = isTeacher ? `
+            <button onclick="viewSubmissions('${id}')"
+              class="bg-yellow-600 text-white px-4 py-2 rounded-md shadow-lg hover:bg-yellow-500 transition mt-2 flex items-center gap-2">
+              <i class="ri-folder-open-line"></i>
+              <span>View Submissions</span>
+            </button>
+            <button onclick="deleteClasswork('${(work.title || "").replace(/'/g,"\\'")}')"
+              class="px-3 py-1.5 text-sm text-gray-300 rounded-md hover:bg-red-600 transition shadow-sm mt-2 flex items-center gap-2">
+              <i class="ri-delete-bin-6-line"></i> <span>Delete</span>
+            </button>` : "";
+
+            const studentBtn = !isTeacher ? `
+            <div class="flex flex-col gap-2 mt-5">
+              <div class="flex flex-col gap-2 mt-5">
+                <button data-work-id="${id}" data-work-title="${titleEsc}" 
+                  onclick="openUploadWorkModal(this)"
+                  class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-lg hover:bg-blue-500 transition flex items-center gap-2">
+                  <i class="ri-upload-cloud-2-line"></i>
+                  <span>Upload</span>
+                </button>
+              </div>
+              <button onclick="viewFeedback('${id}')"
+                class="bg-green-600 text-white px-4 py-2 rounded-md shadow-lg hover:bg-green-500 transition flex items-center gap-2">
+                <i class="ri-file-text-line"></i>
+                <span>Feedback</span>
+              </button>
+            </div>
+            
+          ` : "";
+
+          const li = document.createElement("li");
+          li.className = "bg-[#003566] p-4 rounded-md shadow-md text-white mb-4";
+          li.innerHTML = `
+            <div class="flex items-center gap-3">${icon}
+              <h3 class="text-lg sm:text-xl font-semibold text-white tracking-wide hover:text-indigo-400 transition">${work.title}</h3>
+            </div>
+            <p class="mt-3 text-gray-300 text-sm leading-relaxed">${work.description || ""}</p>
+            <small class="text-gray-500 mt-3 block italic text-xs">Created on: ${work.created_at}</small>
+            <div class="mt-5 flex flex-wrap gap-3">${teacherBtns}${studentBtn}</div>
+          `;
+          container.appendChild(li);
+        });
+      }
+
+      async function fetchClasswork(){
+        try{
+          const res = await fetch(`/classroom/${classroomId}/view_work/`, { headers:{ "X-Requested-With":"XMLHttpRequest" }});
+          const data = await res.json();
+          renderList(data.classworks || []);
+        }catch(e){
+          console.error(e);
+          container.innerHTML = "<p class='text-red-400 text-sm'>Error fetching classwork.</p>";
+        }
+      }
+      refreshBtn?.addEventListener("click", fetchClasswork);
+      fetchClasswork();
+    });
+
+    // ===== Delete Classwork (teacher) =====
+    function deleteClasswork(classworkTitle){
+      if(!confirm(`Are you sure you want to delete "${classworkTitle}"? This action cannot be undone.`)){ return; }
+      fetch("/delete-classwork/", {
+        method: "DELETE",
+        headers: { "Content-Type":"application/json", "X-Requested-With":"XMLHttpRequest" },
+        body: JSON.stringify({ title: classworkTitle })
+      })
+      .then(r=>{ if(!r.ok) throw new Error(`Status ${r.status}`); return r.json(); })
+      .then(()=>{ alert("✅ Classwork deleted successfully."); location.reload(); })
+      .catch(e=>{ console.error(e); alert("❌ Failed to delete classwork."); });
+    }
+
+    // ===== Submissions Modal (dynamic) =====
+    async function viewSubmissions(classworkId) {
+      try {
+        const res = await fetch(`/fetch-student-work/?classwork_id=${classworkId}`, {
+          headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" }
+        });
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
+    
+        let modal = document.getElementById(`submissionsModal-${classworkId}`);
+        if (!modal) {
+          modal = document.createElement('div');
+          modal.id = `submissionsModal-${classworkId}`;
+          modal.className = "fixed inset-0 z-[90] flex items-center justify-center bg-black/70 backdrop-blur-sm hidden";
+    
+          modal.innerHTML = `
+            <div id="modalContent-${classworkId}" class="relative bg-gray-900/90 backdrop-blur-lg border border-white rounded-3xl shadow-2xl max-w-lg w-full p-6 md:p-8">
+              <!-- Close Button -->
+              <button id="closeModalBtn-${classworkId}" class="absolute top-4 right-4 text-gray-400 hover:text-white transition text-2xl font-bold">&times;</button>
+    
+              <!-- Header -->
+              <h3 class="text-2xl font-bold text-white mb-6 text-center">Student Submissions</h3>
+    
+              <!-- Submissions Content -->
+              <div id="submissionsContent-${classworkId}" class="max-h-80 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-900">
+              </div>
+            </div>
+          `;
+          document.body.appendChild(modal);
+    
+          // Close button
+          document.getElementById(`closeModalBtn-${classworkId}`).addEventListener('click', () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+          });
+    
+          // Close modal when clicking outside content
+          modal.addEventListener('click', (e) => {
+            if (e.target.id === modal.id) {
+              modal.classList.add('hidden');
+              modal.classList.remove('flex');
+            }
+          });
+        }
+    
+        const holder = document.getElementById(`submissionsContent-${classworkId}`);
+        holder.innerHTML = (data.student_works && data.student_works.length)
+          ? data.student_works.map(w => `
+            <div class="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-xl p-4 shadow-md">
+              <div class="flex justify-between items-center">
+                <p class="text-lg font-semibold text-white">${w.student_name}</p>
+                <span class="text-sm text-gray-400">${w.submitted_at}</span>
+              </div>
+              <p class="text-sm text-gray-300 mt-1">Status: ${w.status}</p>
+              ${w.feedback ? `<p class="mt-2 text-gray-300">💬 Feedback: ${w.feedback}</p>` : ''}
+              ${w.file_url ? `<button onclick="window.open('${w.file_url}', '_blank')" 
+                class="mt-3 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg shadow transition-all w-full text-sm font-medium">
+                📂 View File
+              </button>
+             ` : `<p class="text-red-400 mt-3 font-medium">No file attached</p>`}
+            </div>
+          `).join('')
+          : `<p class="text-gray-400 text-center py-4">No submissions yet.</p>`;
+    
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    
+      } catch (e) {
+        console.error(e);
+        alert("Failed to load submissions.");
+      }
+    }
+    // Very simple markdown-like parser
+function parseFeedback(text) {
+  if (!text) return "No feedback yet";
+  return text
+    .replace(/^# (.*$)/gim, "<h2 class='text-lg font-bold text-blue-400 mb-2'>$1</h2>")
+    .replace(/^## (.*$)/gim, "<h3 class='text-md font-semibold text-blue-300 mb-1'>$1</h3>")
+    .replace(/\*\*(.*?)\*\*/gim, "<strong class='text-yellow-300'>$1</strong>")
+    .replace(/\*(.*?)\*/gim, "<em class='text-pink-300'>$1</em>")
+    .replace(/_(.*?)_/gim, "<span class='italic text-green-300'>$1</span>")
+    .replace(/`(.*?)`/gim, "<code class='bg-gray-800 text-purple-300 px-1 py-0.5 rounded'>$1</code>")
+    .replace(/\n/g, "<br>");
+}
+
+async function viewFeedback(classworkId) {
+  const modal = document.getElementById("feedbackModal");
+  const content = document.getElementById("feedbackContent");
+
+  modal.classList.remove("hidden");
+  content.innerHTML = "Loading...";
+
+  try {
+    const res = await fetch(`/classroom/${classworkId}/my-feedback/`);
+    if (!res.ok) throw new Error("Response not OK: " + res.status);
+
+    const data = await res.json();
+
+    if (data.submission) {
+      const feedbackHTML = parseFeedback(data.submission.feedback);
+
+      content.innerHTML = `
+      
+        <div class="p-3 bg-gray-800/70 rounded-lg border border-gray-700">
+          <p class="text-white font-semibold text-blue-400">
+            Grade:
+          </p>
+          
+          <p class="text-white">${data.submission.grade ?? "Not graded yet"}</p>
+        </div>
+      
+        <div class="p-3 bg-gray-800/70 rounded-lg border border-gray-700 overflow-y-auto max-h-48">
+          <p class="text-white font-semibold text-blue-400">
+            Feedback:
+          </p>
+          <hr class="border-gray-600 my-2">
+          <div class="mt-2 text-sm leading-relaxed">${feedbackHTML}</div>
+        </div>
+      
+        ${data.submission.graded_by ? `
+        <div class="p-3 bg-gray-800/70 rounded-lg border border-gray-700">
+          <p class="text-white font-semibold text-blue-400">
+            Graded by:
+          </p>
+          <hr class="border-gray-600 my-2">
+          <p class="text-white">${data.submission.graded_by}</p>
+        </div>` : ""}
+      
+        <p class="text-xs text-gray-400">Submitted on: ${data.submission.submitted_at}</p>
+ 
+      
+      `;
+    } else {
+      content.innerHTML = `<p>No feedback available yet.</p>`;
+    }
+  } catch (err) {
+    console.error("Fetch error:", err);
+    content.innerHTML = `<p class="text-red-500">Failed to fetch feedback. Please try again.</p>`;
+  }
+}
+
+    
+    
+    // Close modal
+    document.getElementById("closeFeedbackModal").addEventListener("click", () => {
+      document.getElementById("feedbackModal").classList.add("hidden");
+    });
+    window.addEventListener("click", (e) => {
+      const modal = document.getElementById("feedbackModal");
+      if (e.target === modal) modal.classList.add("hidden");
+    });
+    
+    
+
+    // ===== File Preview (PDF/PPT/Image) =====
+    let pdfDoc=null, pageNum=1, pageRendering=false;
+    const pdfCanvas = document.getElementById("pdfCanvas");
+    const pdfCtx    = pdfCanvas?.getContext("2d");
+
+    function openPDF(url){
+      const modal = document.getElementById("fileModal");
+      document.getElementById("pdfViewerContainer").style.display = "block";
+      document.getElementById("pptViewer").style.display = "none";
+      document.getElementById("imageViewer").style.display = "none";
+      modal.style.display = "flex";
+      pdfjsLib.getDocument(url).promise.then(doc=>{
+        pdfDoc = doc; document.getElementById("pageCount").textContent = pdfDoc.numPages; pageNum=1; renderPage(pageNum);
+      });
+    }
+    function renderPage(num){
+      pageRendering = true;
+      pdfDoc.getPage(num).then(page=>{
+        const viewport = page.getViewport({ scale: 1.5 });
+        pdfCanvas.height = viewport.height; pdfCanvas.width = viewport.width;
+        const task = page.render({ canvasContext: pdfCtx, viewport });
+        task.promise.then(()=>{ pageRendering=false; document.getElementById("pageNum").textContent = num; });
+      });
+    }
+    document.getElementById("prevPage")?.addEventListener("click", ()=>{ if(pageNum>1){ pageNum--; renderPage(pageNum);} });
+    document.getElementById("nextPage")?.addEventListener("click", ()=>{ if(pageNum<pdfDoc.numPages){ pageNum++; renderPage(pageNum);} });
+
+    function openPPT(url){
+      const modal = document.getElementById("fileModal");
+      const viewer = document.getElementById("pptViewer");
+      viewer.src = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
+      document.getElementById("pdfViewerContainer").style.display = "none";
+      document.getElementById("imageViewer").style.display = "none";
+      viewer.style.display = "block";
+      modal.style.display = "flex";
+    }
+    function openImage(url){
+      const modal = document.getElementById("fileModal");
+      const img = document.getElementById("imageViewer");
+      img.src = url;
+      document.getElementById("pdfViewerContainer").style.display = "none";
+      document.getElementById("pptViewer").style.display = "none";
+      img.style.display = "block";
+      modal.style.display = "flex";
+    }
+
+    // Close preview modal
+    const fileModal = document.getElementById("fileModal");
+    document.getElementById("closeModal")?.addEventListener("click", ()=>{ fileModal.style.display="none"; });
+    window.addEventListener("click", (e)=>{ if(e.target===fileModal){ fileModal.style.display="none"; } });
+
+    // Hide upload button on no classworks (mobile)
+    document.addEventListener("DOMContentLoaded", function(){
+      const btn = document.getElementById("uploadButton");
+      if(btn && {{ classroom.classworks.count }} === 0){ btn.style.display = "none"; }
+    });
+  </script>
+</body>
+</html>
