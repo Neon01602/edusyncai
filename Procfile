@@ -1,0 +1,1 @@
+web: gunicorn edusync_ai.wsgi --bind 0.0.0.0:$PORT
