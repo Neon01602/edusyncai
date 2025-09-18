@@ -282,7 +282,6 @@ ultralytics==8.3.40
 ultralytics-thop==2.0.12
 uritemplate==4.1.1
 urllib3==1.26.19
-voice2sql @ file:///D:/Voice_2_SQL
 waitress==3.0.2
 wcwidth==0.2.13
 webexteamssdk==1.6.1
