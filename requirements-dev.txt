@@ -5,7 +5,7 @@ aiofiles==24.1.0
 aiogram==2.15
 aiohttp==3.9.5
 aiormq==6.4.2
-anyio==4.4.0
+anyio==3.4.0
 APScheduler==3.9.1.post1
 asgiref==3.8.1
 astunparse==1.6.3
