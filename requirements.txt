@@ -24,7 +24,7 @@ whitenoise>=6.6.0
 dj-database-url>=1.0.0
 psycopg2-binary>=2.9.9
 
-pywin32
+pywin32; sys_platform == "win32"
 absl-py
 accelerate
 aio-pika
