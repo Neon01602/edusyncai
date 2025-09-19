@@ -1,14 +1,17 @@
-# Django framework
-Django>=4.2,<5.0
+# Django core
+Django>=5.1,<5.2
+djangorestframework>=3.15.0
+django-allauth>=65.0.0
+django-cors-headers>=4.7.0
+django-crispy-forms>=2.3
+django-environ>=0.12.0
+django-extensions>=3.2.3
 
-# Authentication
-django-allauth>=0.61.0
+# Authentication & Google OAuth
 PyJWT>=2.8.0
 cryptography>=42.0.0
 python3-openid>=3.2.0
-requests>=2.31.0
-
-# Google OAuth
+requests>=2.32.0
 google-auth>=2.36.0
 google-auth-oauthlib>=1.0.0
 google-api-python-client>=2.160.0
@@ -16,7 +19,7 @@ httplib2>=0.22.0
 googleapis-common-protos>=1.66.0
 
 # Deployment
-gunicorn>=21.2.0
+gunicorn>=23.0.0
 whitenoise>=6.6.0
 dj-database-url>=1.0.0
 psycopg2-binary>=2.9.9
