@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: edusync-ai
+    env: python
+    plan: free
+    runtime: python-3.12.6
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn edusync_ai.wsgi:application
