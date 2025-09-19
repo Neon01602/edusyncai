@@ -31,7 +31,7 @@ channels==4.1.0
 
 # Data / ML
 numpy==2.1.1
-pandas==2.2.2
+pandas>=2.2.3
 scikit-learn==1.5.2
 scipy==1.14.1
 matplotlib==3.9.2
