@@ -59,7 +59,7 @@ grpcio-status==1.71.0
 
 h2==3.2.0
 hstspreload==2024.10.1
-httpcore==0.14.7
+httpcore==0.15.0
 httpx==0.23.3
 h11==0.12.0
 
